@@ -75,9 +75,9 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
                     Validate.notEmpty(successors, "\n State:" + source + " should have at least one successor.");
                     result.addSuccessors(source, successors);
                 }
-                System.out.println("winning state done");
+                System.out.println("one winning state done");
             }
-            System.out.println("goal done");
+            System.out.println("one goal done");
             finalResult.add(result);
         }
 
