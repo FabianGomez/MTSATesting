@@ -1,0 +1,128 @@
+// ---------------------------ENVIRONMENTS-----------------------------
+set From = {pm,s,gm,dt}
+set To = {pm,s,gm,dt}
+set Nurse = {gm,dt}
+set Doctor = {pm,s}
+set ControllableActions = {{To}.enable,{To}.disable}
+
+// ['to].action['from]
+
+set Values = {{To}.executed[0..1][From], {To}.in[From], {To}.out[From], {To}.required[0..1][From]}
+set Setters = {{To}.remove[From], {To}.add[From], {To}.add_req[From]}
+set AExec = {{To}.exec}
+set AEnds = {{To}.disable}
+set AChecks = {{To}.enable}
+
+set FromPMValues = {{To}.executed[0..1]['pm], {To}.in['pm], {To}.out['pm], {To}.required[0..1]['pm]}
+set FromSValues = {{To}.executed[0..1]['s], {To}.in['s], {To}.out['s], {To}.required[0..1]['s]}
+set FromGMValues = {{To}.executed[0..1]['gm], {To}.in['gm], {To}.out['gm], {To}.required[0..1]['gm]}
+set FromDTValues = {{To}.executed[0..1]['dt], {To}.in['dt], {To}.out['dt], {To}.required[0..1]['dt]}
+set FromPMSetters = {{To}.remove['pm], {To}.add['pm], {To}.add_req['pm]}
+set FromSSetters = {{To}.remove['s], {To}.add['s], {To}.add_req['s]}
+set FromGMSetters = {{To}.remove['gm], {To}.add['gm], {To}.add_req['gm]}
+set FromDTSetters = {{To}.remove['dt], {To}.add['dt], {To}.add_req['dt]}
+
+
+//Environments
+
+NOT_EXECUTED = (executed[0][From] -> NOT_EXECUTED 
+	| exec -> EXECUTED),
+EXECUTED = ({executed[1][From],exec} -> EXECUTED).
+
+IN = (remove[From] -> OUT 
+	| {in[From],add[From]} -> IN),
+OUT = ({out[From],remove[From]} -> OUT 
+	| add[From] -> IN).
+
+NOT_REQ = ({required[0][From],exec} -> NOT_REQ 
+	| add_req[From] -> REQ),
+REQ = (exec -> NOT_REQ 
+	| {add_req[From],required[1][From]} -> REQ).
+
+PM_PROP = (pm.enable -> CHECKING),
+CHECKING = (pm.in['pm] -> PM_EXECUTE
+	| pm.out['pm] -> pm.disable -> PM_PROP),
+PM_EXECUTE = (pm.exec -> s.add_req['pm] -> gm.add_req['pm] -> pm.disable -> PM_PROP)+
+												{FromPMValues,FromPMSetters}.
+S_PROP = (s.enable -> CHECKING),
+CHECKING = 	( s.in['s] -> CHECK1 
+	| s.out['s] -> s.disable -> S_PROP),
+CHECK1 = (pm.in['s] -> CHECK2
+	| pm.out['s] -> S_EXECUTE),
+CHECK2 = (pm.executed[1]['s] -> S_EXECUTE 
+	| pm.executed[0]['s] -> s.disable -> S_PROP),
+S_EXECUTE = (s.exec -> gm.add['s] -> dt.add['s] -> s.disable -> S_PROP)+
+												{FromSValues,FromSSetters}.
+
+GM_PROP = (gm.enable -> CHECKING),
+CHECKING = (gm.in['gm] -> CHECK1 
+	| gm.out['gm] -> gm.disable -> GM_PROP),
+CHECK1 = (s.in['gm] -> CHECK2 
+	| s.out['gm] -> GM_EXECUTE),
+CHECK2 = (s.executed[1]['gm] -> GM_EXECUTE
+	| s.executed[0]['gm] -> gm.disable -> GM_PROP),
+GM_EXECUTE = (gm.exec -> dt.remove['gm] -> gm.disable -> GM_PROP)+
+												{FromGMValues,FromGMSetters}.
+
+DT_PROP = (dt.enable -> CHECKING),
+CHECKING = (dt.in['dt] -> CHECK1
+	| dt.out['dt] -> dt.disable -> DT_PROP),
+CHECK1 = (s.in['dt] -> CHECK2
+	| s.out['dt] -> DT_EXECUTE),
+CHECK2 = (s.executed[1]['dt] -> DT_EXECUTE
+	| s.executed[0]['dt] -> dt.disable -> DT_PROP),
+DT_EXECUTE = (dt.exec -> s.add_req['dt] -> gm.remove['dt] -> dt.disable -> DT_PROP)+
+												{FromDTValues,FromDTSetters}.
+
+CHECK = (pm.enable -> PM_CHECK | s.enable -> S_CHECK | gm.enable -> GM_CHECK | dt.enable -> DT_CHECK),
+PM_CHECK = (pm.disable -> CHECK | pm.exec -> pm.disable -> CHECK),
+S_CHECK = (s.disable -> CHECK | s.exec -> s.disable -> CHECK),
+GM_CHECK = (gm.disable -> CHECK | gm.exec -> gm.disable -> CHECK),
+DT_CHECK = (dt.disable -> CHECK | dt.exec -> dt.disable -> CHECK).
+
+||C = ( PM_PROP || S_PROP || GM_PROP || DT_PROP || CHECK || {pm,s,gm,dt}:NOT_EXECUTED || {pm,s,gm,dt}:IN || {pm,s,gm,dt}:NOT_REQ)@{AChecks,AEnds,AExec}.
+
+||ExpectedC = Expected.
+
+Expected = Q0,
+	Q0	= (dt.enable -> Q1
+		  |gm.enable -> Q2
+		  |s.enable -> Q3
+		  |pm.enable -> Q4),
+	Q1	= (dt.disable -> Q0),
+	Q2	= (gm.disable -> Q0),
+	Q3	= (s.disable -> Q0),
+	Q4	= (pm.exec -> Q5),
+	Q5	= (pm.disable -> Q6),
+	Q6	= (pm.enable -> Q4
+		  |dt.enable -> Q7
+		  |gm.enable -> Q8
+		  |s.enable -> Q9),
+	Q7	= (dt.disable -> Q6),
+	Q8	= (gm.disable -> Q6),
+	Q9	= (s.exec -> Q10),
+	Q10	= (s.disable -> Q11),
+	Q11	= (s.enable -> Q9
+		  |dt.enable -> Q12
+		  |gm.enable -> Q16
+		  |pm.enable -> Q22),
+	Q12	= (dt.exec -> Q13),
+	Q13	= (dt.disable -> Q14),
+	Q14	= (s.enable -> Q9
+		  |dt.enable -> Q12
+		  |gm.enable -> Q15
+		  |pm.enable -> Q20),
+	Q15	= (gm.disable -> Q14),
+	Q16	= (gm.exec -> Q17),
+	Q17	= (gm.disable -> Q18),
+	Q18	= (s.enable -> Q9
+		  |gm.enable -> Q16
+		  |dt.enable -> Q19
+		  |pm.enable -> Q24),
+	Q19	= (dt.disable -> Q18),
+	Q20	= (pm.exec -> Q21),
+	Q21	= (pm.disable -> Q14),
+	Q22	= (pm.exec -> Q23),
+	Q23	= (pm.disable -> Q11),
+	Q24	= (pm.exec -> Q25),
+	Q25	= (pm.disable -> Q18).
