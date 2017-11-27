@@ -48,62 +48,41 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         if (!isGameSolved())
             this.solveGame();
 
-        List<Strategy<S, Integer>> finalResult = new ArrayList<Strategy<S, Integer>>();
+        Strategy<S, Integer> result = new Strategy<S, Integer>();
 
-        for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++) {
-            Strategy<S, Integer> result = new Strategy<S, Integer>();
+        Set<S> winningStates = this.getWinningStates();
 
-            Set<S> winningStates = this.getWinningStates();
+        for (S state : winningStates) {
 
-            for (S state : winningStates) {
-                for (int guaranteeId = 1; guaranteeId <= this.getGRGoal().getGuaranteesQuantity(); guaranteeId++) {
-                    StrategyState<S, Integer> source = new StrategyState<S, Integer>(state, guaranteeId);
+            for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++)
+                if(isWinningByGoal(state))
+                    break;
 
-                    int nextMemoryToConsider = this.getNextGuaranteeStrategy(guaranteeId, state);
+            for (int guaranteeId = 1; guaranteeId <= this.getGRGoal().getGuaranteesQuantity(); guaranteeId++) {
+                StrategyState<S, Integer> source = new StrategyState<S, Integer>(state, guaranteeId);
 
-                    // If either a guarantee or a failure was just visited then it
-                    // is ok for the successor of state to have higher rank.
-                    boolean rankMayIncrease = this.getGRGoal().getGuarantee(guaranteeId).contains(state)
-                            || this.getGRGoal().getFailures().contains(state);
+                int nextMemoryToConsider = this.getNextGuaranteeStrategy(guaranteeId, state);
 
-                    Set<StrategyState<S, Integer>> successors = new HashSet<StrategyState<S, Integer>>();
+                // If either a guarantee or a failure was just visited then it
+                // is ok for the successor of state to have higher rank.
+                boolean rankMayIncrease = this.getGRGoal().getGuarantee(guaranteeId).contains(state)
+                        || this.getGRGoal().getFailures().contains(state);
 
-                    this.addUncontrollableSuccesors(state, source, nextMemoryToConsider, rankMayIncrease, successors);
+                Set<StrategyState<S, Integer>> successors = new HashSet<StrategyState<S, Integer>>();
 
-                    this.addControllableSuccesors(state, source, nextMemoryToConsider, rankMayIncrease, successors);
+                this.addUncontrollableSuccesors(state, source, nextMemoryToConsider, rankMayIncrease, successors);
 
-                    Validate.notEmpty(successors, "\n State:" + source + " should have at least one successor.");
-                    result.addSuccessors(source, successors);
-                }
-                System.out.println("one winning state done");
+                this.addControllableSuccesors(state, source, nextMemoryToConsider, rankMayIncrease, successors);
+
+                Validate.notEmpty(successors, "\n State:" + source + " should have at least one successor.");
+                result.addSuccessors(source, successors);
             }
-            System.out.println("one goal done");
-            finalResult.add(result);
+            System.out.println("one winning state done");
         }
 
-        return  mergeSolutions(finalResult);
+        return  result;
 
 
-    }
-
-    public Strategy<S, Integer> mergeSolutions(List<Strategy<S, Integer>> partialResults){
-
-        if(partialResults.size() == 0)
-            return null;
-        if(partialResults.size() == 1)
-            return partialResults.get(0);
-
-        //In this point finalResult.size() >= 2
-        Strategy<S, Integer> result = partialResults.get(0);
-
-        for(Strategy<S, Integer> partialStrategy : partialResults)
-            mergeTwoSolutions(result, partialStrategy);
-
-        return result;
-    }
-
-    public Strategy<S, Integer> mergeTwoSolutions(Strategy<S, Integer> result, Strategy<S, Integer> partialStrategy){
-        return result;
     }
 
     @Override
@@ -305,7 +284,7 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
             this.solveGame();
         }
         for (S state : this.getGame().getStates()) {
-            if (isWinningByGoal(state)) {
+            if (isWinning(state)) {
                 winning.add(state);
             }
         }
