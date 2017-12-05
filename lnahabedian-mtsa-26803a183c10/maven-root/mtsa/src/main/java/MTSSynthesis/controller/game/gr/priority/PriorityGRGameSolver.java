@@ -198,6 +198,7 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         if (!isGameSolved()) {
             this.solveGame();
         }
+
         boolean isWin = false;
         for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++)
             isWin = isWin || !this.getRankSystem().getRank(new StrategyState<S, Integer>(state, 1)).isInfinity();
@@ -225,15 +226,14 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     }
     @Override
     protected void initializeStates(Queue<StrategyState<S, Integer>> pending) {
-        Assume<S> firstAssumption = this.getGame().getGoal().getAssumption(1);
+        Assume<S> firstAssumption = this.getGRGoal().getAssumption(1);
         for (S state : this.getGame().getStates()) {
-            for (int i = 1; i <= this.getGame().getGoal().getGuaranteesQuantity(); i++) {
-                if (!this.getGRGoal().getGuarantee(i).contains(state) && !this.getGame().getGoal().getFailures().contains(state)
+            for (int i = 1; i <= this.getGRGoal().getGuaranteesQuantity(); i++) {
+                if (!this.getGRGoal().getGuarantee(i).contains(state) && !this.getGRGoal().getFailures().contains(state)
                         && firstAssumption.contains(state)) {
                     pending.add(new StrategyState<S, Integer>(state, i));
                 }
             }
-
         }
     }
 
