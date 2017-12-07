@@ -1,5 +1,7 @@
 package MTSTools.ac.ic.doc.mtstools.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import MTSTools.ac.ic.doc.commons.relations.BinaryRelation;
@@ -20,7 +22,9 @@ public interface MTS<State, Action> extends TransitionSystem<State, Action>{
 	public boolean removeRequired(State from, Action label, State to);
 	
 //	public Set<State> getReachableStatesBy(State state, TransitionType transitionType);
-	
+
+	public List<String> log = new ArrayList<>();
+
 	public enum TransitionType {
 		REQUIRED {
 			public <State, Action> boolean addTransition(MTS<State, Action> mts, State from, Action label, State to ) {

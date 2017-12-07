@@ -16,16 +16,29 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     protected GRGamePriority<S> game;
     protected List<GRRankSystem<S>> rankSystem;
     protected int actualGoal = 0;
+    protected List<String> outputSolve;
 
     public PriorityGRGameSolver(GRGamePriority<S> game, List<GRRankSystem<S>> rankSystem) {
         super(game, rankSystem.get(0));
         this.rankSystem = rankSystem;
+        this.outputSolve = new LinkedList<>();
         setGame(game);
     }
 
     protected void setGame(GRGamePriority<S> game) {
         this.game = game;
     }
+
+    public List<String> getOutputSolve(){
+        if (!isGameSolved())
+            this.solveGame();
+
+        addOutputLine("Reachable Goals from the initial state: " + this.getReachableGoalsFromTheInitialState());
+        addOutputLine("Reachable Goals: " + this.getReachableGoals());
+        return outputSolve;
+    }
+
+    protected void addOutputLine(String line) { this.outputSolve.add(line); }
 
     @Override
     public GRGamePriority<S> getGame() {
@@ -356,6 +369,39 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
                         ((stateRank.compareTo(succRank) > 0)
                                 || (stateRank.compareTo(succRank) == 0 && !isInAssumption))));
+
+    }
+
+    private List<Integer> getReachableGoalsFromTheInitialState(){
+        List<Integer> goals = new LinkedList<Integer>();
+        //getGame().getGoals().size() -1 to avoid the safety goal
+        for(actualGoal = 0; actualGoal < getGame().getGoals().size() -1; actualGoal++)
+            if(isWinningByGoal(game.getInitialState()))
+                goals.add(actualGoal);
+
+        return goals;
+
+    }
+
+    private Set<Integer> getReachableGoals(){
+        Set<Integer> goals = new HashSet<Integer>();
+        List<Integer> reachableFromInitial = this.getReachableGoalsFromTheInitialState();
+        goals.addAll(reachableFromInitial);
+        for(S state : this.getGame().getStates())
+            //getGame().getGoals().size() -1 to avoid the safety goal
+            for(int actualGoalPrivate = 0; actualGoalPrivate < getGame().getGoals().size() -1; actualGoalPrivate++)
+                for(Integer goalId : reachableFromInitial) {
+                    actualGoal = actualGoalPrivate;
+                    if(isWinningByGoal(state)){
+                        actualGoal = goalId;
+                        if(isWinningByGoal(state))
+                            goals.add(actualGoalPrivate);
+                    }
+                }
+
+        goals.addAll(this.getReachableGoalsFromTheInitialState());
+
+        return goals;
 
     }
 }

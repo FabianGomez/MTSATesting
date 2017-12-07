@@ -281,6 +281,16 @@ public class GRGameBuilder<State, Action> {
 				grGoals.add(grGoal);
 
 			}
+
+			//Creating the safety's goal
+			GRControllerGoal newGoal = goal.copy();
+			newGoal.getGuarantees().clear();
+			newGoal.getFluents().clear();
+			Guarantees<State> guarantees = new Guarantees<State>();
+			FluentStateValuation<State> valuation = buildGoalComponents(mts, newGoal, assumptions, guarantees, failures);
+			GRGoal<State> grGoalEmpty = new GRGoal<State> (guarantees, assumptions, failures,  newGoal.isPermissive());
+			grGoals.add(grGoalEmpty);
+
 		}catch (Exception e){
 			e.printStackTrace();
 		}

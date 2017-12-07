@@ -1604,6 +1604,10 @@ public class TransitionSystemDispatcher {
 				output.outln("Analysis time: " + (System.currentTimeMillis() - initialTime) + "ms.");
 				return null;
 			} else {
+
+				for(String line : synthesised.log)
+					output.outln("Log: " + line);
+
 				GenericMTSToLongStringMTSConverter<StrategyState<Long, Integer>, String> transformer = new GenericMTSToLongStringMTSConverter<StrategyState<Long, Integer>, String>();
 				MTS<Long, String> plainController = transformer.transform(synthesised);
 

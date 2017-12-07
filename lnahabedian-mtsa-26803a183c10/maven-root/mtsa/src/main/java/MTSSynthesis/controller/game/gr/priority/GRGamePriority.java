@@ -30,4 +30,9 @@ public class GRGamePriority<S> extends GRGame<S> {
     public GRGoal<S> getGoal() {
         return this.getGoals().get(0);
     }
+
+
+    public S getInitialState() {
+        return this.initialState;
+    }
 }
