@@ -15,36 +15,39 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
     protected GRGamePriority<S> game;
     protected List<GRRankSystem<S>> rankSystem;
-    protected int actualGoal = 0;
-    protected List<String> outputSolve;
+    private List<String> outputSolve;
+
+    //region Auxiliary variables
+    private int actualGoal = 0;
+    private Set<Integer> reachableGoals;
+    //endregion
 
     public PriorityGRGameSolver(GRGamePriority<S> game, List<GRRankSystem<S>> rankSystem) {
         super(game, rankSystem.get(0));
         this.rankSystem = rankSystem;
         this.outputSolve = new LinkedList<>();
-        setGame(game);
-    }
-
-    protected void setGame(GRGamePriority<S> game) {
         this.game = game;
     }
 
+    //region Setters-Getters
     public List<String> getOutputSolve(){
         if (!isGameSolved())
             this.solveGame();
 
-        addOutputLine("Reachable Goals from the initial state: " + this.getReachableGoalsFromTheInitialState());
-        addOutputLine("Reachable Goals: " + this.getReachableGoals());
+        addOutputLine("Reachable Goals from the initial state: " + this.convertListGoalsToString(this.getReachableGoalsFromTheInitialState()));
+        addOutputLine("Reachable Goals: " + this.convertListGoalsToString(this.getReachableGoals()));
         return outputSolve;
     }
-
-    protected void addOutputLine(String line) { this.outputSolve.add(line); }
-
+    private void addOutputLine(String line) {
+        this.outputSolve.add(line);
+    }
     @Override
     public GRGamePriority<S> getGame() {
         return this.game;
     }
+    //endregion
 
+    //region Overrides
     @Override
     public GRGoal<S> getGRGoal() {
         return this.game.getGoals().get(actualGoal);
@@ -53,26 +56,25 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     public GRRankSystem<S> getRankSystem() {
         return this.rankSystem.get(actualGoal);
     }
-
-
     @Override
     public Strategy<S, Integer> buildStrategy() {
-
+        reachableGoals = new HashSet<>();
         if (!isGameSolved())
             this.solveGame();
 
-        Strategy<S, Integer> result = new Strategy<S, Integer>();
+        Strategy<S, Integer> result = new Strategy<>();
 
         Set<S> winningStates = this.getWinningStates();
 
         for (S state : winningStates) {
 
             for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++)
-                if(isWinningByGoal(state))
+                if(isWinningByGoal(state)) {
+                    reachableGoals.add(actualGoal);
                     break;
-
+                }
             for (int guaranteeId = 1; guaranteeId <= this.getGRGoal().getGuaranteesQuantity(); guaranteeId++) {
-                StrategyState<S, Integer> source = new StrategyState<S, Integer>(state, guaranteeId);
+                StrategyState<S, Integer> source = new StrategyState<>(state, guaranteeId);
 
                 int nextMemoryToConsider = this.getNextGuaranteeStrategy(guaranteeId, state);
 
@@ -81,7 +83,7 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
                 boolean rankMayIncrease = this.getGRGoal().getGuarantee(guaranteeId).contains(state)
                         || this.getGRGoal().getFailures().contains(state);
 
-                Set<StrategyState<S, Integer>> successors = new HashSet<StrategyState<S, Integer>>();
+                Set<StrategyState<S, Integer>> successors = new HashSet<>();
 
                 this.addUncontrollableSuccesors(state, source, nextMemoryToConsider, rankMayIncrease, successors);
 
@@ -97,7 +99,6 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
 
     }
-
     @Override
     public void solveGame() {
         if (this.isGameSolved()) {
@@ -106,7 +107,7 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
         // Handle the pending states
         for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++) {
-            Queue<StrategyState<S,Integer>> pending = new LinkedList<StrategyState<S,Integer>>();
+            Queue<StrategyState<S,Integer>> pending = new LinkedList<>();
 
             System.out.println("Logging interval: " + TIME_TO_LOG/1000 + " seconds." );
 
@@ -146,6 +147,21 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         System.out.println("RESUELTO." );
     }
     @Override
+    public boolean isWinning(S state) {
+        if (!isGameSolved()) {
+            this.solveGame();
+        }
+
+        boolean isWin = false;
+        for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++)
+            isWin = isWin || !this.getRankSystem().getRank(new StrategyState<>(state, 1)).isInfinity();
+
+        return isWin;
+    }
+    //endregion
+
+    //region Auxiliary Overrides (only necessary because the superclass do not use "THIS.function" to call to a function)
+    @Override
     protected void updateRank(StrategyState<S, Integer> strategyState, Rank bestRank) {
         S state = strategyState.getState();
 
@@ -153,19 +169,17 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
             // Sets infinite rank for state for all guarantees.
             for (int i = 1; i <= this.getGRGoal().getGuaranteesQuantity(); i++) {
                GRRank infinityFor = GRRank
-                        .getInfinityFor(this.getRankSystem().getContext(new StrategyState<S, Integer>(state, i)));
-                this.getRankSystem().set(new StrategyState<S, Integer>(state, i), infinityFor);
+                        .getInfinityFor(this.getRankSystem().getContext(new StrategyState<>(state, i)));
+                this.getRankSystem().set(new StrategyState<>(state, i), infinityFor);
             }
         } else {
             this.getRankSystem().set(strategyState, bestRank);
         }
     }
-
     @Override
     protected Rank getRank(StrategyState<S, Integer> strategyState) {
         return this.getRankSystem().getRank(strategyState);
     }
-
     @Override
     protected Rank best(StrategyState<S, Integer> strategyState) {
         // Different ranks have different infinity values.
@@ -194,7 +208,6 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
         return bestRank;
     }
-
     private GRRank getBestFromSuccessors(S state, Integer guarantee) {
         int nextGuarantee = this.getNextGuarantee(guarantee, state);
         if (getGame().isUncontrollable(state)) {
@@ -207,18 +220,6 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         }
     }
     @Override
-    public boolean isWinning(S state) {
-        if (!isGameSolved()) {
-            this.solveGame();
-        }
-
-        boolean isWin = false;
-        for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++)
-            isWin = isWin || !this.getRankSystem().getRank(new StrategyState<S, Integer>(state, 1)).isInfinity();
-
-        return isWin;
-    }
-    @Override
     protected void initialise(Queue<StrategyState<S, Integer>> pending) {
         initializeEndingStates(pending);
         initializeStates(pending);
@@ -228,10 +229,10 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         for (S state : this.getGame().getStates()) {
             if (this.getGame().getControllableSuccessors(state).isEmpty() && this.getGame().getUncontrollableSuccessors(state).isEmpty()) {
                 for (int guaranteeId = 1; guaranteeId <= this.getGRGoal().getGuaranteesQuantity(); guaranteeId++) {
-                    StrategyState<S, Integer> strategyState = new StrategyState<S, Integer>(state, guaranteeId);
+                    StrategyState<S, Integer> strategyState = new StrategyState<>(state, guaranteeId);
                     setInfinity(strategyState);
                 }
-                StrategyState<S, Integer> firstGuaranteeRank = new StrategyState<S, Integer>(state, 1);
+                StrategyState<S, Integer> firstGuaranteeRank = new StrategyState<>(state, 1);
                 Rank infinity = this.getRankSystem().getRank(firstGuaranteeRank);
                 this.addPredecessorsTo(pending, firstGuaranteeRank, infinity);
             }
@@ -244,18 +245,16 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
             for (int i = 1; i <= this.getGRGoal().getGuaranteesQuantity(); i++) {
                 if (!this.getGRGoal().getGuarantee(i).contains(state) && !this.getGRGoal().getFailures().contains(state)
                         && firstAssumption.contains(state)) {
-                    pending.add(new StrategyState<S, Integer>(state, i));
+                    pending.add(new StrategyState<>(state, i));
                 }
             }
         }
     }
-
     @Override
     protected void setInfinity(StrategyState<S, Integer> strategyState) {
         GRRank infinity = GRRank.getInfinityFor(this.getRankSystem().getContext(strategyState));
         this.getRankSystem().set(strategyState, infinity);
     }
-
     @Override
     protected void addPredecessorsTo(Queue<StrategyState<S, Integer>> pending, StrategyState<S, Integer> strategyState, Rank bestRank) {
         S state = strategyState.getState();
@@ -266,15 +265,15 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
             if (bestRank.isInfinity()) {
                 if (this.getGame().isUncontrollable(pred)) {
-                    pending.add(new StrategyState<S, Integer>(pred, 1));
+                    pending.add(new StrategyState<>(pred, 1));
                 } else {
-                    StrategyState<S, Integer> predecessor = new StrategyState<S, Integer>(pred, 1);
+                    StrategyState<S, Integer> predecessor = new StrategyState<>(pred, 1);
                     if (this.needsToBeUpdated(predecessor)) {
                         addIfNotIn(pending, predecessor);
                     }
                 }
             } else {
-                StrategyState<S, Integer> predecessor = new StrategyState<S, Integer>(pred, guaranteeId);
+                StrategyState<S, Integer> predecessor = new StrategyState<>(pred, guaranteeId);
                 if (this.needsToBeUpdated(predecessor)) {
                     addIfNotIn(pending, predecessor);
 
@@ -282,17 +281,15 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
             }
         }
     }
-
     @Override
     protected boolean needsToBeUpdated(StrategyState<S, Integer> predecesorStrategyState) {
         Rank best = this.best(predecesorStrategyState);
         Rank rank = this.getRankSystem().getRank(predecesorStrategyState);
         return best.compareTo(rank) > 0;
     }
-
     @Override
     public Set<S> getWinningStates() {
-        Set<S> winning = new HashSet<S>();
+        Set<S> winning = new HashSet<>();
         if (!isGameSolved()) {
             this.solveGame();
         }
@@ -303,57 +300,33 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         }
         return winning;
     }
-
-    public boolean isWinningByGoal(S state) {
-        if (!isGameSolved()) {
-            this.solveGame();
-        }
-
-        return !this.getRankSystem().getRank(new StrategyState<S, Integer>(state, 1)).isInfinity();
-    }
-
-
-    protected int getNextGuaranteeStrategy(int guaranteeId, S state) {
-        Guarantee<S> guarantee = this.getGRGoal().getGuarantee(guaranteeId);
-        if (guarantee.contains(state)) {
-            return this.increaseGuarantee(guaranteeId);
-        } else {
-            return guaranteeId;
-        }
-    }
-    private int increaseGuarantee(int guaranteeId) {
-        return (guaranteeId % this.getGRGoal().getGuaranteesQuantity()) + 1;
-    }
-
     @Override
     protected void addUncontrollableSuccesors(S state, StrategyState<S, Integer> source, int nextMemoryToConsider,
                                               boolean rankMayIncrease, Set<StrategyState<S, Integer>> successors) {
         for (S succ : this.getGame().getUncontrollableSuccessors(state)) {
-            Validate.isTrue(this.isBetterThan(source, new StrategyState<S, Integer>(succ, nextMemoryToConsider),
+            Validate.isTrue(this.isBetterThan(source, new StrategyState<>(succ, nextMemoryToConsider),
                     rankMayIncrease), "State: " + succ + " must have a better rank than state: " + state);
-            StrategyState<S, Integer> target = new StrategyState<S, Integer>(succ, nextMemoryToConsider);
+            StrategyState<S, Integer> target = new StrategyState<>(succ, nextMemoryToConsider);
             successors.add(target);
         }
     }
-
     @Override
     protected void addControllableSuccesors(S state, StrategyState<S, Integer> source, int nextMemoryToConsider,
                                             boolean rankMayIncrease, Set<StrategyState<S, Integer>> successors) {
         for (S succ : this.getGame().getControllableSuccessors(state)) {
-            if (this.isBetterThan(source, new StrategyState<S, Integer>(succ, nextMemoryToConsider), rankMayIncrease)) {
+            if (this.isBetterThan(source, new StrategyState<>(succ, nextMemoryToConsider), rankMayIncrease)) {
                 Validate.isTrue(this.isWinningByGoal(succ), "state: " + succ + " it's not winning.");
-                StrategyState<S, Integer> target = new StrategyState<S, Integer>(succ, nextMemoryToConsider);
+                StrategyState<S, Integer> target = new StrategyState<>(succ, nextMemoryToConsider);
                 successors.add(target);
             }
 
             else if (this.getGRGoal().buildPermissiveStrategy() && this.isWinningByGoal(succ)) {
-                StrategyState<S, Integer> target = new StrategyState<S, Integer>(succ, nextMemoryToConsider);
+                StrategyState<S, Integer> target = new StrategyState<>(succ, nextMemoryToConsider);
                 successors.add(target);
-                this.getWorseRank().add(new Pair<StrategyState<S, Integer>, StrategyState<S, Integer>>(source, target));
+                this.getWorseRank().add(new Pair<>(source, target));
             }
         }
     }
-
     @Override
     public boolean isBetterThan(StrategyState<S, Integer> state, StrategyState<S, Integer> succ, boolean mayIncrease) {
 
@@ -371,9 +344,31 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
                                 || (stateRank.compareTo(succRank) == 0 && !isInAssumption))));
 
     }
+    @Override
+    protected int getNextGuaranteeStrategy(int guaranteeId, S state) {
+        Guarantee<S> guarantee = this.getGRGoal().getGuarantee(guaranteeId);
+        if (guarantee.contains(state)) {
+            return this.increaseGuarantee(guaranteeId);
+        } else {
+            return guaranteeId;
+        }
+    }
+    //@Override no overrides because it is private on the superclass
+    private int increaseGuarantee(int guaranteeId) {
+        return (guaranteeId % this.getGRGoal().getGuaranteesQuantity()) + 1;
+    }
+    //endregion
 
+    //region Auxiliary functions
+    private boolean isWinningByGoal(S state) {
+        if (!isGameSolved()) {
+            this.solveGame();
+        }
+
+        return !this.getRankSystem().getRank(new StrategyState<>(state, 1)).isInfinity();
+    }
     private List<Integer> getReachableGoalsFromTheInitialState(){
-        List<Integer> goals = new LinkedList<Integer>();
+        List<Integer> goals = new LinkedList<>();
         //getGame().getGoals().size() -1 to avoid the safety goal
         for(actualGoal = 0; actualGoal < getGame().getGoals().size() -1; actualGoal++)
             if(isWinningByGoal(game.getInitialState()))
@@ -382,26 +377,20 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         return goals;
 
     }
-
     private Set<Integer> getReachableGoals(){
-        Set<Integer> goals = new HashSet<Integer>();
-        List<Integer> reachableFromInitial = this.getReachableGoalsFromTheInitialState();
-        goals.addAll(reachableFromInitial);
-        for(S state : this.getGame().getStates())
-            //getGame().getGoals().size() -1 to avoid the safety goal
-            for(int actualGoalPrivate = 0; actualGoalPrivate < getGame().getGoals().size() -1; actualGoalPrivate++)
-                for(Integer goalId : reachableFromInitial) {
-                    actualGoal = actualGoalPrivate;
-                    if(isWinningByGoal(state)){
-                        actualGoal = goalId;
-                        if(isWinningByGoal(state))
-                            goals.add(actualGoalPrivate);
-                    }
-                }
-
-        goals.addAll(this.getReachableGoalsFromTheInitialState());
-
-        return goals;
-
+        return reachableGoals;
     }
+    private String convertListGoalsToString(Collection<Integer> goals){
+        String result = "[";
+        for(Integer goal : goals) {
+            if(goal != getGame().getGoals().size()-1)   //!Safety goal
+                result += "LivenessGoals[" + goal + "],";
+
+        }
+        result += "]";
+        result = result.replace(",]","]");
+        return result;
+    }
+    //endregion
+
 }
