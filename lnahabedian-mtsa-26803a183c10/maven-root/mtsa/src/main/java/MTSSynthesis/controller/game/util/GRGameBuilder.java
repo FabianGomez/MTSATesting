@@ -239,13 +239,13 @@ public class GRGameBuilder<State, Action> {
 		List<Formula> formulas = new LinkedList<>();
 		List<GRGoal<State>> grGoals = new LinkedList<>();
 		try {
-			for (Formula formula : goal.getGuarantees())
-				formulas.add(formula);
+			//Get all the guarantees to satisfy
+			formulas.addAll( goal.getGuarantees());
 
 			Set<Fluent> fluents = new HashSet<Fluent>();
-			for (Fluent fluent : goal.getFluents())
-				fluents.add(fluent);
+			fluents.addAll(goal.getFluents());
 
+			//For each Guarantee create a new Goal with itself as the only Guarantee
 			for (Formula formula : formulas) {
 				Guarantees<State> guarantees = new Guarantees<State>();
 
@@ -261,6 +261,7 @@ public class GRGameBuilder<State, Action> {
 						actualFluent = fluent;
 				}
 
+				//Remove the fluents of the others guarantees
 				Set<Fluent> removeFluents = new HashSet<Fluent>();
 				for(Fluent fluent : fluents) {
 					for (Formula formula2 : formulas)
@@ -274,6 +275,8 @@ public class GRGameBuilder<State, Action> {
 						newGoal.getFluents().add(fluent);
 				}
 
+
+				//Generate the new assumptions, guarantees and failures
 				FluentStateValuation<State> valuation = buildGoalComponents(mts, newGoal, assumptions, guarantees, failures);
 
 
@@ -282,7 +285,8 @@ public class GRGameBuilder<State, Action> {
 
 			}
 
-			//Creating the safety's goal
+			//Creating the safety goal, a goal without any guarantee
+			//This goal will be the goal with the lowest priority
 			GRControllerGoal newGoal = goal.copy();
 			newGoal.getGuarantees().clear();
 			newGoal.getFluents().clear();

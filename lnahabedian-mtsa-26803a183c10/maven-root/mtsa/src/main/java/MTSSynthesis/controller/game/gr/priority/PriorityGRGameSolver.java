@@ -68,11 +68,14 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
         for (S state : winningStates) {
 
+            //Take the goal with highest priority that can be solved in this moment
             for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++)
                 if(isWinningByGoal(state)) {
                     reachableGoals.add(actualGoal);
                     break;
                 }
+
+            //Add the successors to that goal and the actual state
             for (int guaranteeId = 1; guaranteeId <= this.getGRGoal().getGuaranteesQuantity(); guaranteeId++) {
                 StrategyState<S, Integer> source = new StrategyState<>(state, guaranteeId);
 
@@ -104,8 +107,7 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         if (this.isGameSolved()) {
             return;
         }
-
-        // Handle the pending states
+        //Solve the game for each goal
         for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++) {
             Queue<StrategyState<S,Integer>> pending = new LinkedList<>();
 
@@ -144,7 +146,7 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
             }
         }
         gameSolved();
-        System.out.println("RESUELTO." );
+        System.out.println("Solved." );
     }
     @Override
     public boolean isWinning(S state) {
@@ -153,6 +155,7 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         }
 
         boolean isWin = false;
+        //The state is a winning state if at least one of the rankings in not infinite
         for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++)
             isWin = isWin || !this.getRankSystem().getRank(new StrategyState<>(state, 1)).isInfinity();
 
@@ -369,8 +372,8 @@ public class PriorityGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     }
     private List<Integer> getReachableGoalsFromTheInitialState(){
         List<Integer> goals = new LinkedList<>();
-        //getGame().getGoals().size() -1 to avoid the safety goal
-        for(actualGoal = 0; actualGoal < getGame().getGoals().size() -1; actualGoal++)
+        //Select all the goals that its ranking are not infinity for the initial state
+        for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++)
             if(isWinningByGoal(game.getInitialState()))
                 goals.add(actualGoal);
 
