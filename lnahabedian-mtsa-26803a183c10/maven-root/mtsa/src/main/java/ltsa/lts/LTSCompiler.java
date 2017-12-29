@@ -2165,10 +2165,17 @@ public class LTSCompiler {
                 goal.setConcurrencyDefinitions(this.controllerSubGoal());
             } else if (current.kind == Symbol.CONTROLLER_LAZYNESS) {
                 goal.setLazyness(this.controllerSubValue());
-            } else if (current.kind == Symbol.GOALPRIORITY) {
-                goal.setPriority(true);
+            } else if (current.kind == Symbol.OPPORTUNIST) {
+                goal.setOpportunist(true);
                 next_symbol();
-            } else if (current.kind == Symbol.NON_TRANSIENT) {
+            }else if (current.kind == Symbol.OPPORTUNISTOPTIMIST) {
+                goal.setOpportunistOptimist(true);
+                next_symbol();
+            }else if (current.kind == Symbol.OPPORTUNISTPESSIMIST) {
+                goal.setOpportunistPessimist(true);
+                next_symbol();
+            }
+            else if (current.kind == Symbol.NON_TRANSIENT) {
                 next_symbol();
                 goal.setNonTransient(true);
             } else if (current.kind == Symbol.ACTIVITY_FLUENTS) {

@@ -1,10 +1,10 @@
-package MTSSynthesis.controller.game.gr.priority;
+package MTSSynthesis.controller.game.gr.opportunist;
 import MTSSynthesis.controller.model.gr.GRGame;
 import MTSSynthesis.controller.model.gr.GRGoal;
 import java.util.List;
 import java.util.Set;
 
-public class GRGamePriority<S> extends GRGame<S> {
+public class OpportunistGRGame<S> extends GRGame<S> {
 
     private List<GRGoal<S>> goals;
     private S initialState;
@@ -13,7 +13,7 @@ public class GRGamePriority<S> extends GRGame<S> {
         return goals;
     }
 
-    public GRGamePriority(Set<S> initialStates, Set<S> states, List<GRGoal<S>> goals, S initialState) {
+    public OpportunistGRGame(Set<S> initialStates, Set<S> states, List<GRGoal<S>> goals, S initialState) {
         super(initialStates, states, goals.get(0));
         this.goals = goals;
         this.initialState = initialState;

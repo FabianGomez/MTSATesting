@@ -27,7 +27,9 @@ public class GRControllerGoal<Action> implements ControllerGoal<Action>,Cloneabl
 	private Integer maxControllers;
 	private Integer maxSchedulers;
 	private boolean reachability;
-	private boolean priority;
+	private boolean opportunist;
+	private boolean opportunist_pessimist;
+	private boolean opportunist_optimist;
 
 	public GRControllerGoal() {
 		this.faults = new ArrayList<Formula>();
@@ -42,7 +44,9 @@ public class GRControllerGoal<Action> implements ControllerGoal<Action>,Cloneabl
 		this.maxControllers = 0;
 		this.maxSchedulers = 0;
 		this.reachability = false;
-		this.priority = false;
+		this.opportunist = false;
+		this.opportunist_pessimist = false;
+		this.opportunist_optimist = false;
 	}
 	
 	@Override
@@ -61,7 +65,9 @@ public class GRControllerGoal<Action> implements ControllerGoal<Action>,Cloneabl
 		clone.maxControllers = this.maxControllers;
 		clone.maxSchedulers = this.maxSchedulers;
 		clone.reachability = this.reachability;
-		clone.priority = this.priority;
+		clone.opportunist = this.opportunist;
+		clone.opportunist_pessimist = this.opportunist_pessimist;
+		clone.opportunist_optimist = this.opportunist_pessimist;
 		return clone;
 	}
 	
@@ -261,7 +267,9 @@ public class GRControllerGoal<Action> implements ControllerGoal<Action>,Cloneabl
 		copy.fluents = copySetaFluent(this.fluents);
 		copy.fluentsInFaults = copySetaFluent(this.fluentsInFaults);
 		copy.concurrencyFluents = copySetaFluent(this.concurrencyFluents);
-		copy.priority = this.hasPriority();
+		copy.opportunist = this.isOpportunist();
+		copy.opportunist_optimist = this.isOpportunistOptimist();
+		copy.opportunist_pessimist = this.isOpportunistPessimist();
 		if (this.controllableActions == null)
 			copy.controllableActions = null;
 		else
@@ -301,11 +309,27 @@ public class GRControllerGoal<Action> implements ControllerGoal<Action>,Cloneabl
 	FABI
 	 */
 
-	public void setPriority(boolean priority) {
-		this.priority = priority;
+	public void setOpportunist(boolean opportunist) {
+		this.opportunist = opportunist;
 	}
 
-	public boolean hasPriority() {
-		return priority;
+	public boolean isOpportunist() {
+		return opportunist;
+	}
+
+	public void setOpportunistPessimist(boolean pessimist) {
+		this.opportunist_pessimist = pessimist;
+	}
+
+	public boolean isOpportunistPessimist() {
+		return opportunist_pessimist;
+	}
+
+	public void setOpportunistOptimist(boolean optimist) {
+		this.opportunist_optimist = optimist;
+	}
+
+	public boolean isOpportunistOptimist() {
+		return opportunist_optimist;
 	}
 }

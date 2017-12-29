@@ -74,7 +74,9 @@ public class SymbolTable {
         addSymbols("assumption", Symbol.ASSUME);
         addSymbols("failure", Symbol.FAULT);
         addSymbols("liveness", Symbol.GUARANTEE);
-        addSymbols("goalpriority", Symbol.GOALPRIORITY);
+        addSymbols("opportunist", Symbol.OPPORTUNIST);
+        addSymbols("opp_pessimist", Symbol.OPPORTUNISTPESSIMIST);
+        addSymbols("opp_optimist", Symbol.OPPORTUNISTOPTIMIST);
         addSymbols("controllable", Symbol.CONTROLLABLE);
         addSymbols("checkCompatibility", Symbol.CHECK_COMPATIBILITY);
         addSymbols("permissive", Symbol.PERMISSIVE);

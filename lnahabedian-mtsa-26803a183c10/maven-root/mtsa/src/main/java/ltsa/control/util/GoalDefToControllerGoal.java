@@ -31,7 +31,9 @@ public class GoalDefToControllerGoal {
 		result.setLazyness(goalDef.getLazyness());
 		result.setNonTransient(goalDef.isNonTransient());
         result.setReachability(goalDef.isReachability());
-        result.setPriority(goalDef.hasPriority());
+        result.setOpportunist(goalDef.isOpportunist());
+		result.setOpportunistOptimist(goalDef.isOpportunistOptimist());
+		result.setOpportunistPessimist(goalDef.isOpportunistPessimist());
         if(goalDef.isTestLatency()){
             result.setTestLatency(goalDef.getMaxSchedulers(), goalDef.getMaxControllers());
         }

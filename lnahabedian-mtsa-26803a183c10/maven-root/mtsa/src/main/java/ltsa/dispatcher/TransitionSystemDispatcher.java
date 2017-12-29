@@ -1451,7 +1451,7 @@ public class TransitionSystemDispatcher {
 		if (composition != null) {
 			if (compositeState.goal != null) {
 				CompactState synthesiseController;
-				//if(compositeState.goal.hasPriority())
+				//if(compositeState.goal.isOpportunist())
 				//	synthesiseController = synthesisePriorityGR(compositeState, compositeState.goal, output);
 				// /else
 					synthesiseController = synthesiseGR(compositeState, compositeState.goal, output);

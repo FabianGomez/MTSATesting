@@ -25,7 +25,9 @@ public class ControllerGoalDefinition {
 	private Integer maxControllers;
 	private Integer maxSchedulers;
 	private boolean reachability;
-	private boolean priority;
+	private boolean opportunist;
+	private boolean opportunist_pessimist;
+	private boolean opportunist_optimist;
 	private List<Symbol> concurrencyDefinitions;
 	private List<Symbol> activityDefinitions;
 
@@ -58,7 +60,9 @@ public class ControllerGoalDefinition {
 		this.maxControllers = 0;
 		this.maxSchedulers = 0;
 		this.reachability = false;
-		this.priority = false;
+		this.opportunist = false;
+		this.opportunist_pessimist = false;
+		this.opportunist_optimist = false;
 	}
 
 	public ControllerGoalDefinition(String name) {
@@ -305,12 +309,27 @@ public class ControllerGoalDefinition {
 		FABI
 	 */
 
-	public boolean hasPriority() {
-		return priority;
+	public boolean isOpportunist() {
+		return opportunist;
 	}
 
-	public void setPriority(boolean priority) {
-		this.priority = priority;
+	public void setOpportunist(boolean opportunist) {
+		this.opportunist = opportunist;
 	}
 
+	public boolean isOpportunistPessimist() {
+		return opportunist_pessimist;
+	}
+
+	public void setOpportunistPessimist(boolean pessimist) {
+		this.opportunist_pessimist = pessimist;
+	}
+
+	public boolean isOpportunistOptimist() {
+		return opportunist_optimist;
+	}
+
+	public void setOpportunistOptimist(boolean optimist) {
+		this.opportunist_optimist = optimist;
+	}
 }

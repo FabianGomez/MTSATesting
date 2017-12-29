@@ -833,7 +833,7 @@ public class HPWindow extends JFrame implements Runnable {
         // stopTool.setEnabled(true);
         theAction = action;
         executer = new Thread(this);
-//        executer.setPriority(Thread.NORM_PRIORITY - 1);
+//        executer.setOpportunist(Thread.NORM_PRIORITY - 1);
         executer.start();
     }
 

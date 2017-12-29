@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import MTSSynthesis.controller.game.gr.priority.GRGamePriority;
+import MTSSynthesis.controller.game.gr.opportunist.OpportunistGRGame;
 import org.apache.commons.lang.Validate;
 
 import MTSTools.ac.ic.doc.commons.relations.Pair;
@@ -231,7 +231,7 @@ public class GRGameBuilder<State, Action> {
 		}
 	}
 
-	public GRGamePriority<State> buildGRPriorityGameFrom(MTS<State, Action> mts, GRControllerGoal<Action> goal, State initialSate) {
+	public OpportunistGRGame<State> buildGRPriorityGameFrom(MTS<State, Action> mts, GRControllerGoal<Action> goal, State initialSate) {
 		this.validateActions(mts, goal);
 
 		Assumptions<State> assumptions = new Assumptions<State>();
@@ -286,7 +286,7 @@ public class GRGameBuilder<State, Action> {
 			}
 
 			//Creating the safety goal, a goal without any guarantee
-			//This goal will be the goal with the lowest priority
+			//This goal will be the goal with the lowest opportunist
 			GRControllerGoal newGoal = goal.copy();
 			newGoal.getGuarantees().clear();
 			newGoal.getFluents().clear();
@@ -302,7 +302,7 @@ public class GRGameBuilder<State, Action> {
 
 		Set<State> initialStates = new HashSet<State>();
 		initialStates.add(mts.getInitialState());
-		GRGamePriority<State> game = new GRGamePriority<State>(initialStates, mts.getStates(), grGoals, initialSate);
+		OpportunistGRGame<State> game = new OpportunistGRGame<State>(initialStates, mts.getStates(), grGoals, initialSate);
 		this.initialiseSuccessors(mts, goal, game);
 
 		return game;

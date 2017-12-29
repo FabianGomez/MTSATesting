@@ -278,8 +278,13 @@ public class Symbol {
 			return "string";
 		case UNKNOWN_TYPE:
 			return "unknown";
-		case GOALPRIORITY:
-			return "goalPriority";
+		case OPPORTUNIST:
+			return "opportunist";
+		case OPPORTUNISTPESSIMIST:
+			return "opp_pessimist";
+		case OPPORTUNISTOPTIMIST:
+			return "opp_optimist";
+
 			// _______________________________________________________________________________________
 
 		case UPPERIDENT:
@@ -538,7 +543,9 @@ public class Symbol {
 	public static final int CONTROL_TIER = 3102;
 	
 	public static final int ENACTMENT = 3103;
-    public static final int GOALPRIORITY = 3104;
+    public static final int OPPORTUNIST = 3104;
+	public static final int OPPORTUNISTOPTIMIST = 3105;
+	public static final int OPPORTUNISTPESSIMIST = 3106;
 	// _______________________________________________________________________________________
 	// Updating controller symbols
 	
@@ -684,7 +691,9 @@ public class Symbol {
 		blueSymbols.add(GRAPH_TRANSITIONS);
 		blueSymbols.add(FOREACH);
 		blueSymbols.add(ENACTMENT);
-        blueSymbols.add(GOALPRIORITY);
+        blueSymbols.add(OPPORTUNIST);
+		blueSymbols.add(OPPORTUNISTOPTIMIST);
+		blueSymbols.add(OPPORTUNISTPESSIMIST);
 	}
 
 	@Override

@@ -1,14 +1,15 @@
 package MTSSynthesis.controller;
 
-import java.awt.*;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import MTSSynthesis.controller.game.gr.priority.GRGamePriority;
-import MTSSynthesis.controller.game.gr.priority.PriorityGRGameSolver;
+import MTSSynthesis.controller.game.gr.opportunist.OpportunistGRGame;
+import MTSSynthesis.controller.game.gr.opportunist.OpportunistGRGameSolver;
+import MTSSynthesis.controller.game.gr.opportunist.OpportunistGRGameSolverOptimistic;
+import MTSSynthesis.controller.game.gr.opportunist.OpportunistGRGameSolverPesimistic;
 import MTSSynthesis.controller.model.gr.GRGoal;
 import MTSTools.ac.ic.doc.commons.relations.Pair;
 import MTSTools.ac.ic.doc.mtstools.model.MTS;
@@ -40,19 +41,29 @@ public class LTSControllerSynthesiserImpl<S,A> implements LTSControllerSynthesis
 
 		//TODO: Remove this when ConcurrencyGRGameSolver is ready.
 		int maxLazyness = goal.getLazyness();
-		boolean hasPriority = goal.hasPriority();
+		boolean opportunistic = goal.isOpportunist();
+		boolean pessimist = goal.isOpportunistPessimist();
+		boolean optimist = goal.isOpportunistOptimist();
 		GameSolver<S, Integer> solver;
 		GRGameSolver<S> gSolver;
 
-		if(hasPriority){
+		if(opportunistic || pessimist || optimist){
 			game = new GRGameBuilder<S, A>().buildGRPriorityGameFrom(plant, goal,plant.getInitialState());
-			GRGamePriority gamePriority = (GRGamePriority<S>)game;
+			OpportunistGRGame gamePriority = (OpportunistGRGame<S>)game;
 			java.util.List<GRRankSystem<S>> systemList = new LinkedList<GRRankSystem<S>>();
 			for(Object goalPriorityNoDef : gamePriority.getGoals()) {
 				GRGoal<S> goalPriority = ((GRGoal<S>) goalPriorityNoDef);
 				systemList.add(new GRRankSystem<S>(game.getStates(), goalPriority.getGuarantees(), goalPriority.getAssumptions(), goalPriority.getFailures()));
 			}
-			gSolver = new PriorityGRGameSolver<S>((GRGamePriority<S>)game, systemList);
+			gSolver = null;
+
+			if(opportunistic)
+				gSolver = new OpportunistGRGameSolver<>((OpportunistGRGame<S>)game, systemList);
+			if(pessimist)
+				gSolver = new OpportunistGRGameSolverPesimistic<>((OpportunistGRGame<S>)game, systemList);
+			if(optimist)
+				gSolver = new OpportunistGRGameSolverOptimistic<>((OpportunistGRGame<S>)game, systemList);
+
 			solver = gSolver;
 		} else if(maxLazyness > 0 ){
 			game = new GRGameBuilder<S, A>().buildGRGameFrom(plant, goal);
@@ -74,8 +85,8 @@ public class LTSControllerSynthesiserImpl<S,A> implements LTSControllerSynthesis
 			Set<Pair<StrategyState<S, Integer>, StrategyState<S, Integer>>> worseRank = grSolver.getWorseRank();
 			MTS<StrategyState<S, Integer>, A> result = GameStrategyToMTSBuilder.getInstance().buildMTSFrom(plant, strategy, worseRank, maxLazyness);
 
-			if(hasPriority)
-				result.log.addAll(((PriorityGRGameSolver<S>) gSolver).getOutputSolve());
+			if(opportunistic || pessimist || optimist)
+				result.log.addAll(((OpportunistGRGameSolver<S>) gSolver).getOutputSolve());
 
 			result.removeUnreachableStates();
 			return result;
