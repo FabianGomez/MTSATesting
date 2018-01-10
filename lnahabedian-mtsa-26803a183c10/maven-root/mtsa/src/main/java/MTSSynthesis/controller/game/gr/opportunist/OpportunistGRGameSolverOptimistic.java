@@ -21,19 +21,19 @@ public class OpportunistGRGameSolverOptimistic<S> extends OpportunistGRGameSolve
         if(this.getGame().getControllableSuccessors(state).size()<= 0)
             return;
 
-        S maxState = this.getGame().getControllableSuccessors(state).iterator().next();
-        Integer maxValue = this.getGame().getGoals().size();
+        S minState = this.getGame().getControllableSuccessors(state).iterator().next();
+        Integer minValue = this.getGame().getGoals().size();
         for (S succ : this.getGame().getControllableSuccessors(state))
-            if (bestRank.get(succ) < maxValue) {
-                maxValue = bestRank.get(succ);
-                maxState = succ;
-            } else if(bestRank.get(succ) == maxValue){
+            if (bestRank.get(succ) < minValue) {
+                minValue = bestRank.get(succ);
+                minState = succ;
+            } else if(bestRank.get(succ) == minValue){
                 if (this.isBetterThan(source, new StrategyState<>(succ, nextMemoryToConsider), rankMayIncrease)) {
-                    maxValue = bestRank.get(succ);
-                    maxState = succ;
+                    minValue = bestRank.get(succ);
+                    minState = succ;
                 }
             }
-        StrategyState<S, Integer> target = new StrategyState<>(maxState, nextMemoryToConsider);
+        StrategyState<S, Integer> target = new StrategyState<>(minState, nextMemoryToConsider);
         successors.add(target);
 
     }

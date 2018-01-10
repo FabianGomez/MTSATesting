@@ -72,7 +72,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
         for (S state : winningStates) {
 
-            //Take the goal with highest opportunist that can be solved in this moment
+            //Take the goal with highest priority that can be solved in this moment
             for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++)
                 if(isWinningByGoal(state)) {
                     reachableGoals.add(actualGoal);
@@ -416,10 +416,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     private void updateWorstRank(S state, Integer newValue){
         if(newValue == -1)
             return;
-        if(!worstRank.containsKey(state))
-            worstRank.put(state,newValue);
-        else
-            worstRank.put(state, newValue);
+        worstRank.put(state, newValue);
     }
     private void initializeBestRank(S state, Integer newValue){
         if(!bestRank.containsKey(state))
@@ -429,11 +426,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
                 bestRank.put(state, newValue);
     }
     private void updateBestRank(S state, Integer newValue){
-        if(!bestRank.containsKey(state))
-            bestRank.put(state,newValue);
-        else
-
-            bestRank.put(state, newValue);
+        bestRank.put(state, newValue);
     }
     private void checkBestWorstRank(S state){
         Integer bestFromSuccesors = getBestRankFromSuccesorsOf(state);

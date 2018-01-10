@@ -48,7 +48,7 @@ public class LTSControllerSynthesiserImpl<S,A> implements LTSControllerSynthesis
 		GRGameSolver<S> gSolver;
 
 		if(opportunistic || pessimist || optimist){
-			game = new GRGameBuilder<S, A>().buildGRPriorityGameFrom(plant, goal,plant.getInitialState());
+			game = new GRGameBuilder<S, A>().buildGROpportunistGameFrom(plant, goal,plant.getInitialState());
 			OpportunistGRGame gamePriority = (OpportunistGRGame<S>)game;
 			java.util.List<GRRankSystem<S>> systemList = new LinkedList<GRRankSystem<S>>();
 			for(Object goalPriorityNoDef : gamePriority.getGoals()) {

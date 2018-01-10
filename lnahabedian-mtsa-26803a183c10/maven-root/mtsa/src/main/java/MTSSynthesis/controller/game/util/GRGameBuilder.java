@@ -231,7 +231,7 @@ public class GRGameBuilder<State, Action> {
 		}
 	}
 
-	public OpportunistGRGame<State> buildGRPriorityGameFrom(MTS<State, Action> mts, GRControllerGoal<Action> goal, State initialSate) {
+	public OpportunistGRGame<State> buildGROpportunistGameFrom(MTS<State, Action> mts, GRControllerGoal<Action> goal, State initialSate) {
 		this.validateActions(mts, goal);
 
 		Assumptions<State> assumptions = new Assumptions<State>();
