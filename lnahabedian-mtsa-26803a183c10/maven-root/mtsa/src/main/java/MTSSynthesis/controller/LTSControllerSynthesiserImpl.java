@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import MTSSynthesis.controller.game.gr.opportunist.OpportunistGRGame;
 import MTSSynthesis.controller.game.gr.opportunist.OpportunistGRGameSolver;
 import MTSSynthesis.controller.game.gr.opportunist.OpportunistGRGameSolverOptimistic;
-import MTSSynthesis.controller.game.gr.opportunist.OpportunistGRGameSolverPesimistic;
+import MTSSynthesis.controller.game.gr.opportunist.OpportunistGRGameSolverPessimistic;
 import MTSSynthesis.controller.model.gr.GRGoal;
 import MTSTools.ac.ic.doc.commons.relations.Pair;
 import MTSTools.ac.ic.doc.mtstools.model.MTS;
@@ -60,7 +60,7 @@ public class LTSControllerSynthesiserImpl<S,A> implements LTSControllerSynthesis
 			if(opportunistic)
 				gSolver = new OpportunistGRGameSolver<>((OpportunistGRGame<S>)game, systemList);
 			if(pessimist)
-				gSolver = new OpportunistGRGameSolverPesimistic<>((OpportunistGRGame<S>)game, systemList);
+				gSolver = new OpportunistGRGameSolverPessimistic<>((OpportunistGRGame<S>)game, systemList);
 			if(optimist)
 				gSolver = new OpportunistGRGameSolverOptimistic<>((OpportunistGRGame<S>)game, systemList);
 

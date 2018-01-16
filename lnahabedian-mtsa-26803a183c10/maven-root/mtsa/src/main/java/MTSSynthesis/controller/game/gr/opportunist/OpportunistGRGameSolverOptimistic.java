@@ -27,9 +27,9 @@ public class OpportunistGRGameSolverOptimistic<S> extends OpportunistGRGameSolve
             if (bestRank.get(succ) < minValue) {
                 minValue = bestRank.get(succ);
                 minState = succ;
-            } else if(bestRank.get(succ) == minValue){
-                if (this.isBetterThan(source, new StrategyState<>(succ, nextMemoryToConsider), rankMayIncrease)) {
-                    minValue = bestRank.get(succ);
+            } else if(bestRank.get(succ).equals(minValue)){
+                StrategyState<S, Integer> target = new StrategyState<>(minState, nextMemoryToConsider);
+                if (this.isBetterThan(target, new StrategyState<>(succ, nextMemoryToConsider), rankMayIncrease)) {
                     minState = succ;
                 }
             }

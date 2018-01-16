@@ -3,10 +3,10 @@ import MTSSynthesis.controller.game.gr.*;
 
 import java.util.*;
 
-public class OpportunistGRGameSolverPesimistic<S> extends OpportunistGRGameSolver<S> {
+public class OpportunistGRGameSolverPessimistic<S> extends OpportunistGRGameSolver<S> {
 
 
-    public OpportunistGRGameSolverPesimistic(OpportunistGRGame<S> game, List<GRRankSystem<S>> rankSystem) {
+    public OpportunistGRGameSolverPessimistic(OpportunistGRGame<S> game, List<GRRankSystem<S>> rankSystem) {
         super(game, rankSystem);
     }
 
@@ -24,9 +24,9 @@ public class OpportunistGRGameSolverPesimistic<S> extends OpportunistGRGameSolve
             if (worstRank.get(succ) < minValue) {
                 minValue = worstRank.get(succ);
                 minState = succ;
-            } else if(worstRank.get(succ) == minValue){
-                if (this.isBetterThan(source, new StrategyState<>(succ, nextMemoryToConsider), rankMayIncrease)) {
-                    minValue = worstRank.get(succ);
+            } else if(worstRank.get(succ).equals(minValue)){
+                StrategyState<S, Integer> target = new StrategyState<>(minState, nextMemoryToConsider);
+                if (this.isBetterThan(target, new StrategyState<>(succ, nextMemoryToConsider), rankMayIncrease)) {
                     minState = succ;
                 }
             }
