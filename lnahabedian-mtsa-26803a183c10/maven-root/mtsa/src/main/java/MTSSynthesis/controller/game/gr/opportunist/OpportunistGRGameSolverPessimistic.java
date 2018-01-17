@@ -1,6 +1,5 @@
 package MTSSynthesis.controller.game.gr.opportunist;
 import MTSSynthesis.controller.game.gr.*;
-
 import java.util.*;
 
 public class OpportunistGRGameSolverPessimistic<S> extends OpportunistGRGameSolver<S> {

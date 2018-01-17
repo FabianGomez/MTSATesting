@@ -1,10 +1,6 @@
 package MTSSynthesis.controller.game.gr.opportunist;
-
-import MTSSynthesis.controller.game.gr.GRRankSystem;
-import MTSSynthesis.controller.game.gr.StrategyState;
-
-import java.util.List;
-import java.util.Set;
+import MTSSynthesis.controller.game.gr.*;
+import java.util.*;
 
 public class OpportunistGRGameSolverOptimistic<S> extends OpportunistGRGameSolver<S> {
 
@@ -37,6 +33,5 @@ public class OpportunistGRGameSolverOptimistic<S> extends OpportunistGRGameSolve
         successors.add(target);
 
     }
-
 
 }

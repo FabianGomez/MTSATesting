@@ -51,7 +51,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     }
     //endregion
 
-    //region Overrides
+    //region Overrides 
     @Override
     public GRGoal<S> getGRGoal() {
         return this.game.getGoals().get(actualGoal);
@@ -216,7 +216,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
         return bestRank;
     }
-    private GRRank getBestFromSuccessors(S state, Integer guarantee) {
+    public GRRank getBestFromSuccessors(S state, Integer guarantee) {
         int nextGuarantee = this.getNextGuarantee(guarantee, state);
         if (getGame().isUncontrollable(state)) {
             // there is no assumption about the environment
@@ -295,9 +295,9 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         }
     }
     @Override
-    protected boolean needsToBeUpdated(StrategyState<S, Integer> predecesorStrategyState) {
-        Rank best = this.best(predecesorStrategyState);
-        Rank rank = this.getRankSystem().getRank(predecesorStrategyState);
+    protected boolean needsToBeUpdated(StrategyState<S, Integer> predecessorStrategyState) {
+        Rank best = this.best(predecessorStrategyState);
+        Rank rank = this.getRankSystem().getRank(predecessorStrategyState);
         return best.compareTo(rank) > 0;
     }
     @Override
@@ -429,39 +429,39 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         bestRank.put(state, newValue);
     }
     private void checkBestWorstRank(S state){
-        Integer bestFromSuccesors = getBestRankFromSuccesorsOf(state);
-        updateBestRank(state ,bestFromSuccesors);
-        Integer worstFromSuccesors = getWorstRankFromSuccesorsOf(state);
-        updateWorstRank(state ,worstFromSuccesors);
+        Integer bestFromSuccessors = getBestRankFromSuccessorsOf(state);
+        updateBestRank(state ,bestFromSuccessors);
+        Integer worstFromSuccessors = getWorstRankFromSuccessorsOf(state);
+        updateWorstRank(state ,worstFromSuccessors);
     }
-    private Integer getBestRankFromSuccesorsOf(S state){
-        int fromSuccesors = this.getGame().getGoals().size();
+    private Integer getBestRankFromSuccessorsOf(S state){
+        int fromSuccessors = this.getGame().getGoals().size();
         if (getGame().isUncontrollable(state)) {
             for( S succ : this.getGame().getUncontrollableSuccessors(state))
-                if(bestRank.containsKey(succ) && bestRank.get(succ) < fromSuccesors)
-                    fromSuccesors = bestRank.get(succ);
+                if(bestRank.containsKey(succ) && bestRank.get(succ) < fromSuccessors)
+                    fromSuccessors = bestRank.get(succ);
         } else {
             for (S succ : this.getGame().getControllableSuccessors(state))
-                if (bestRank.containsKey(succ) && bestRank.get(succ) < fromSuccesors)
-                    fromSuccesors = bestRank.get(succ);
+                if (bestRank.containsKey(succ) && bestRank.get(succ) < fromSuccessors)
+                    fromSuccessors = bestRank.get(succ);
         }
-        return fromSuccesors;
+        return fromSuccessors;
 
     }
-    private Integer getWorstRankFromSuccesorsOf(S state){
-        int fromSuccesors = -1;
+    private Integer getWorstRankFromSuccessorsOf(S state){
+        int fromSuccessors = -1;
         if (getGame().isUncontrollable(state)) {
 
             for( S succ : this.getGame().getUncontrollableSuccessors(state))
-                if(worstRank.containsKey(succ) && worstRank.get(succ) > fromSuccesors)
-                    fromSuccesors = worstRank.get(succ);
+                if(worstRank.containsKey(succ) && worstRank.get(succ) > fromSuccessors)
+                    fromSuccessors = worstRank.get(succ);
         } else {
-            fromSuccesors = this.getGame().getGoals().size();
+            fromSuccessors = this.getGame().getGoals().size();
             for (S succ : this.getGame().getControllableSuccessors(state))
-                if (worstRank.containsKey(succ) && worstRank.get(succ) < fromSuccesors)
-                    fromSuccesors = worstRank.get(succ);
+                if (worstRank.containsKey(succ) && worstRank.get(succ) < fromSuccessors)
+                    fromSuccessors = worstRank.get(succ);
         }
-        return fromSuccesors;
+        return fromSuccessors;
 
     }
     //endregion
