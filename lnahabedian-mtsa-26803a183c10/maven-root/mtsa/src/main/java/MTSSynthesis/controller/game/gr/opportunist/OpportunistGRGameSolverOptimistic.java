@@ -1,5 +1,7 @@
 package MTSSynthesis.controller.game.gr.opportunist;
 import MTSSynthesis.controller.game.gr.*;
+import MTSTools.ac.ic.doc.commons.relations.Pair;
+
 import java.util.*;
 
 public class OpportunistGRGameSolverOptimistic<S> extends OpportunistGRGameSolver<S> {
@@ -18,15 +20,21 @@ public class OpportunistGRGameSolverOptimistic<S> extends OpportunistGRGameSolve
             return;
 
         S minState = this.getGame().getControllableSuccessors(state).iterator().next();
-        Integer minValue = this.getGame().getGoals().size();
+        Pair<Integer,Integer> minValue = new Pair<> (this.getGame().getGoals().size(),this.getGame().getStates().size());
         for (S succ : this.getGame().getControllableSuccessors(state))
-            if (bestRank.get(succ) < minValue) {
+            if (bestRank.get(succ).getFirst() < minValue.getFirst()) {
                 minValue = bestRank.get(succ);
                 minState = succ;
-            } else if(bestRank.get(succ).equals(minValue)){
-                StrategyState<S, Integer> target = new StrategyState<>(minState, nextMemoryToConsider);
-                if (this.isBetterThan(target, new StrategyState<>(succ, nextMemoryToConsider), rankMayIncrease)) {
+            } else if(bestRank.get(succ).getFirst().equals(minValue.getFirst())){
+
+                if(bestRank.get(succ).getSecond() < minValue.getSecond()) {
+                    minValue = bestRank.get(succ);
                     minState = succ;
+                }else if(bestRank.get(succ).getSecond().equals(minValue.getSecond())) {
+                    StrategyState<S, Integer> target = new StrategyState<>(minState, nextMemoryToConsider);
+                    if (this.isBetterThan(target, new StrategyState<>(succ, nextMemoryToConsider), rankMayIncrease)) {
+                        minState = succ;
+                    }
                 }
             }
         StrategyState<S, Integer> target = new StrategyState<>(minState, nextMemoryToConsider);

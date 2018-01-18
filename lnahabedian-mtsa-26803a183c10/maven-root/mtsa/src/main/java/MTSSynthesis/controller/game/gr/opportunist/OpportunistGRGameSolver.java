@@ -16,7 +16,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     protected OpportunistGRGame<S> game;
     protected List<GRRankSystem<S>> rankSystem;
     protected Map<S,Integer> worstRank;
-    protected Map<S,Integer> bestRank;
+    protected Map<S,Pair<Integer,Integer>> bestRank;
     private List<String> outputSolve;
 
     //region Auxiliary variables
@@ -51,7 +51,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     }
     //endregion
 
-    //region Overrides 
+    //region Overrides
     @Override
     public GRGoal<S> getGRGoal() {
         return this.game.getGoals().get(actualGoal);
@@ -147,8 +147,8 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
                 this.updateRank(state, bestRank);
 
                 this.addPredecessorsTo(pending, state, bestRank);
-
             }
+            System.out.println("One goal solved." );
         }
         gameSolved();
         System.out.println("Solved." );
@@ -176,7 +176,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         if (bestRank.isInfinity()) {
             // Sets infinite rank for state for all guarantees.
             for (int i = 1; i <= this.getGRGoal().getGuaranteesQuantity(); i++) {
-               GRRank infinityFor = GRRank
+                GRRank infinityFor = GRRank
                         .getInfinityFor(this.getRankSystem().getContext(new StrategyState<>(state, i)));
                 this.getRankSystem().set(new StrategyState<>(state, i), infinityFor);
             }
@@ -255,7 +255,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
                         && firstAssumption.contains(state)) {
                     pending.add(new StrategyState<>(state, i));
                 }
-                if(this.getGRGoal().getGuarantee(i).contains(state) || this.getGRGoal().getFailures().contains(state)){
+                if(this.getGRGoal().getGuarantee(i).contains(state)){
                     initializeWorstRank(state,actualGoal);
                     initializeBestRank(state,actualGoal);
                     addIfNotIn(pending,new StrategyState<>(state, i));
@@ -416,33 +416,46 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     private void updateWorstRank(S state, Integer newValue){
         if(newValue == -1)
             return;
+
         worstRank.put(state, newValue);
     }
     private void initializeBestRank(S state, Integer newValue){
         if(!bestRank.containsKey(state))
-            bestRank.put(state,newValue);
+            bestRank.put(state,new Pair<>(newValue,0));
         else
-            if(bestRank.get(state) > newValue)
-                bestRank.put(state, newValue);
+            if(bestRank.get(state).getFirst() > newValue)
+                bestRank.put(state, new Pair<>(newValue,0));
     }
-    private void updateBestRank(S state, Integer newValue){
-        bestRank.put(state, newValue);
+    private void updateBestRank(S state, Integer newValue, Integer path){
+        if(bestRank.containsKey(state) && bestRank.get(state).getFirst() >= newValue &&  bestRank.get(state).getSecond() < path)
+            return;
+
+        if(bestRank.containsKey(state) && bestRank.get(state).getFirst()  < newValue)
+            return;
+
+        bestRank.put(state,  new Pair<>(newValue,path));
     }
     private void checkBestWorstRank(S state){
-        Integer bestFromSuccessors = getBestRankFromSuccessorsOf(state);
-        updateBestRank(state ,bestFromSuccessors);
+        Pair<Integer,Integer> bestFromSuccessors = getBestRankFromSuccessorsOf(state);
+        updateBestRank(state ,bestFromSuccessors.getFirst(), bestFromSuccessors.getSecond() + 1 );
         Integer worstFromSuccessors = getWorstRankFromSuccessorsOf(state);
         updateWorstRank(state ,worstFromSuccessors);
     }
-    private Integer getBestRankFromSuccessorsOf(S state){
-        int fromSuccessors = this.getGame().getGoals().size();
+    private Pair<Integer,Integer> getBestRankFromSuccessorsOf(S state){
+        Pair<Integer,Integer> fromSuccessors = new Pair<>(this.getGame().getGoals().size(),this.getGame().getStates().size());
         if (getGame().isUncontrollable(state)) {
-            for( S succ : this.getGame().getUncontrollableSuccessors(state))
-                if(bestRank.containsKey(succ) && bestRank.get(succ) < fromSuccessors)
+            for( S succ : this.getGame().getUncontrollableSuccessors(state)){
+                if(bestRank.containsKey(succ) && bestRank.get(succ).getFirst() < fromSuccessors.getFirst())
                     fromSuccessors = bestRank.get(succ);
+                else if(bestRank.containsKey(succ) && bestRank.get(succ).getFirst().equals(fromSuccessors.getFirst()) && bestRank.get(succ).getSecond() < fromSuccessors.getSecond())
+                    fromSuccessors = bestRank.get(succ);
+            }
+
         } else {
             for (S succ : this.getGame().getControllableSuccessors(state))
-                if (bestRank.containsKey(succ) && bestRank.get(succ) < fromSuccessors)
+                if(bestRank.containsKey(succ) && bestRank.get(succ).getFirst() < fromSuccessors.getFirst())
+                    fromSuccessors = bestRank.get(succ);
+                else if(bestRank.containsKey(succ) && bestRank.get(succ).getFirst().equals(fromSuccessors.getFirst())&& bestRank.get(succ).getSecond() < fromSuccessors.getSecond())
                     fromSuccessors = bestRank.get(succ);
         }
         return fromSuccessors;
