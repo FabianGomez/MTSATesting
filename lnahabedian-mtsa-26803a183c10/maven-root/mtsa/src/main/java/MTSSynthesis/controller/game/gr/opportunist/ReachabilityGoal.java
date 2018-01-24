@@ -1,10 +1,10 @@
 package MTSSynthesis.controller.game.gr.opportunist;
 
-public class ReacheabilityGoal {
+public class ReachabilityGoal {
     private Integer goal;
     private Integer path;
 
-    public ReacheabilityGoal(Integer goal, Integer path){
+    public ReachabilityGoal(Integer goal, Integer path){
         this.setGoal(goal);
         this.setPath(path);
     }

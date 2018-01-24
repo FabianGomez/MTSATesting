@@ -16,7 +16,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     protected OpportunistGRGame<S> game;
     protected List<GRRankSystem<S>> rankSystem;
     protected Map<S,Integer> worstRank;
-    protected Map<S,ReacheabilityGoal> bestRank;
+    protected Map<S,ReachabilityGoal> bestRank;
     private List<String> outputSolve;
 
     //region Auxiliary variables
@@ -421,10 +421,10 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     }
     private void initializeBestRank(S state, Integer newValue){
         if(!bestRank.containsKey(state))
-            bestRank.put(state,new ReacheabilityGoal(newValue,0));
+            bestRank.put(state,new ReachabilityGoal(newValue,0));
         else
             if(bestRank.get(state).getGoal() > newValue)
-                bestRank.put(state, new ReacheabilityGoal(newValue,0));
+                bestRank.put(state, new ReachabilityGoal(newValue,0));
     }
     private void updateBestRank(S state, Integer newValue, Integer path){
         if(bestRank.containsKey(state) && bestRank.get(state).getGoal() >= newValue &&  bestRank.get(state).getPath() < path)
@@ -433,16 +433,16 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         if(bestRank.containsKey(state) && bestRank.get(state).getGoal()  < newValue)
             return;
 
-        bestRank.put(state,  new ReacheabilityGoal(newValue,path));
+        bestRank.put(state,  new ReachabilityGoal(newValue,path));
     }
     private void checkBestWorstRank(S state){
-        ReacheabilityGoal bestFromSuccessors = getBestRankFromSuccessorsOf(state);
+        ReachabilityGoal bestFromSuccessors = getBestRankFromSuccessorsOf(state);
         updateBestRank(state ,bestFromSuccessors.getGoal(), bestFromSuccessors.getPath() + 1 );
         Integer worstFromSuccessors = getWorstRankFromSuccessorsOf(state);
         updateWorstRank(state ,worstFromSuccessors);
     }
-    private ReacheabilityGoal getBestRankFromSuccessorsOf(S state){
-        ReacheabilityGoal fromSuccessors = new ReacheabilityGoal(this.getGame().getGoals().size(),this.getGame().getStates().size());
+    private ReachabilityGoal getBestRankFromSuccessorsOf(S state){
+        ReachabilityGoal fromSuccessors = new ReachabilityGoal(this.getGame().getGoals().size(),this.getGame().getStates().size());
         if (getGame().isUncontrollable(state)) {
             for( S succ : this.getGame().getUncontrollableSuccessors(state)){
                 if(bestRank.containsKey(succ) && bestRank.get(succ).getGoal() < fromSuccessors.getGoal())
