@@ -20,17 +20,17 @@ public class OpportunistGRGameSolverOptimistic<S> extends OpportunistGRGameSolve
             return;
 
         S minState = this.getGame().getControllableSuccessors(state).iterator().next();
-        Pair<Integer,Integer> minValue = new Pair<> (this.getGame().getGoals().size(),this.getGame().getStates().size());
+        ReachabilityGoal minValue = new ReachabilityGoal(this.getGame().getGoals().size(),this.getGame().getStates().size());
         for (S succ : this.getGame().getControllableSuccessors(state))
-            if (bestRank.get(succ).getFirst() < minValue.getFirst()) {
+            if (bestRank.get(succ).getGoal() < minValue.getGoal()) {
                 minValue = bestRank.get(succ);
                 minState = succ;
-            } else if(bestRank.get(succ).getFirst().equals(minValue.getFirst())){
+            } else if(bestRank.get(succ).getGoal().equals(minValue.getGoal())){
 
-                if(bestRank.get(succ).getSecond() < minValue.getSecond()) {
+                if(bestRank.get(succ).getPath() < minValue.getPath()) {
                     minValue = bestRank.get(succ);
                     minState = succ;
-                }else if(bestRank.get(succ).getSecond().equals(minValue.getSecond())) {
+                }else if(bestRank.get(succ).getPath().equals(minValue.getPath())) {
                     StrategyState<S, Integer> target = new StrategyState<>(minState, nextMemoryToConsider);
                     if (this.isBetterThan(target, new StrategyState<>(succ, nextMemoryToConsider), rankMayIncrease)) {
                         minState = succ;
