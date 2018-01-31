@@ -15,8 +15,8 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
     protected OpportunistGRGame<S> game;
     protected List<GRRankSystem<S>> rankSystem;
-    protected Map<S,Integer> worstRank;
-    protected Map<S,ReachabilityGoal> bestRank;
+    protected ReachabilityGoalRank<S> worstGoal;
+    protected ReachabilityGoalRank<S> bestGoal;
     private List<String> outputSolve;
 
     //region Auxiliary variables
@@ -29,8 +29,8 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         this.rankSystem = rankSystem;
         this.outputSolve = new LinkedList<>();
         this.game = game;
-        this.worstRank = new HashMap<>();
-        this.bestRank = new HashMap<>();
+        this.worstGoal = new ReachabilityGoalRank<>(this.getGame().getGoals().size(),this.getGame().getStates().size());
+        this.bestGoal = new ReachabilityGoalRank<>(this.getGame().getGoals().size(),this.getGame().getStates().size());
     }
 
     //region Setters-Getters
@@ -122,7 +122,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
                 StrategyState<S, Integer> state = pending.poll();
 
-                checkBestWorstRank(state.getState());
+                checkGoals(state.getState());
                 // The current rank of the state s
                 Rank rank = this.getRank(state);
 
@@ -407,75 +407,46 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     private void initializeWorstRank(S state, Integer newValue){
         if(newValue == -1)
             return;
-        if(!worstRank.containsKey(state))
-            worstRank.put(state,newValue);
+        if(!worstGoal.isDefined(state))
+            worstGoal.setState(state,newValue,0);
         else
-            if(worstRank.get(state) > newValue)
-                worstRank.put(state, newValue);
+            if(worstGoal.getGoal(state) > newValue)
+                worstGoal.setState(state, newValue,0);
     }
-    private void updateWorstRank(S state, Integer newValue){
+    private void updateWorstRank(S state, Integer newValue, Integer path){
         if(newValue == -1)
             return;
 
-        worstRank.put(state, newValue);
+        worstGoal.setState(state, newValue, path);
     }
     private void initializeBestRank(S state, Integer newValue){
-        if(!bestRank.containsKey(state))
-            bestRank.put(state,new ReachabilityGoal(newValue,0));
+        if(!bestGoal.isDefined(state))
+            bestGoal.setState(state, newValue,0);
         else
-            if(bestRank.get(state).getGoal() > newValue)
-                bestRank.put(state, new ReachabilityGoal(newValue,0));
+            if(bestGoal.getGoal(state) > newValue)
+                bestGoal.setState(state, newValue,0);
     }
     private void updateBestRank(S state, Integer newValue, Integer path){
-        if(bestRank.containsKey(state) && bestRank.get(state).getGoal() >= newValue &&  bestRank.get(state).getPath() < path)
+        if(bestGoal.isDefined(state) && bestGoal.getGoal(state) >= newValue &&  bestGoal.getPath(state) < path)
             return;
 
-        if(bestRank.containsKey(state) && bestRank.get(state).getGoal()  < newValue)
+        if(bestGoal.isDefined(state) && bestGoal.getGoal(state)  < newValue)
             return;
 
-        bestRank.put(state,  new ReachabilityGoal(newValue,path));
+        bestGoal.setState(state, newValue, path);
     }
-    private void checkBestWorstRank(S state){
-        ReachabilityGoal bestFromSuccessors = getBestRankFromSuccessorsOf(state);
+    private void checkGoals(S state){
+        ReachabilityGoal bestFromSuccessors;
+        ReachabilityGoal worstFromSuccessors;
+        if (getGame().isUncontrollable(state)) {
+            bestFromSuccessors = bestGoal.getMinimum(this.getGame().getUncontrollableSuccessors(state));
+            worstFromSuccessors = worstGoal.getMaximum(this.getGame().getUncontrollableSuccessors(state));
+        } else {
+            bestFromSuccessors = bestGoal.getMinimum(this.getGame().getControllableSuccessors(state));
+            worstFromSuccessors = worstGoal.getMinimum(this.getGame().getControllableSuccessors(state));
+        }
         updateBestRank(state ,bestFromSuccessors.getGoal(), bestFromSuccessors.getPath() + 1 );
-        Integer worstFromSuccessors = getWorstRankFromSuccessorsOf(state);
-        updateWorstRank(state ,worstFromSuccessors);
-    }
-    private ReachabilityGoal getBestRankFromSuccessorsOf(S state){
-        ReachabilityGoal fromSuccessors = new ReachabilityGoal(this.getGame().getGoals().size(),this.getGame().getStates().size());
-        if (getGame().isUncontrollable(state)) {
-            for( S succ : this.getGame().getUncontrollableSuccessors(state)){
-                if(bestRank.containsKey(succ) && bestRank.get(succ).getGoal() < fromSuccessors.getGoal())
-                    fromSuccessors = bestRank.get(succ);
-                else if(bestRank.containsKey(succ) && bestRank.get(succ).getGoal().equals(fromSuccessors.getGoal()) && bestRank.get(succ).getPath() < fromSuccessors.getPath())
-                    fromSuccessors = bestRank.get(succ);
-            }
-
-        } else {
-            for (S succ : this.getGame().getControllableSuccessors(state))
-                if(bestRank.containsKey(succ) && bestRank.get(succ).getGoal() < fromSuccessors.getGoal())
-                    fromSuccessors = bestRank.get(succ);
-                else if(bestRank.containsKey(succ) && bestRank.get(succ).getGoal().equals(fromSuccessors.getGoal())&& bestRank.get(succ).getPath() < fromSuccessors.getPath())
-                    fromSuccessors = bestRank.get(succ);
-        }
-        return fromSuccessors;
-
-    }
-    private Integer getWorstRankFromSuccessorsOf(S state){
-        int fromSuccessors = -1;
-        if (getGame().isUncontrollable(state)) {
-
-            for( S succ : this.getGame().getUncontrollableSuccessors(state))
-                if(worstRank.containsKey(succ) && worstRank.get(succ) > fromSuccessors)
-                    fromSuccessors = worstRank.get(succ);
-        } else {
-            fromSuccessors = this.getGame().getGoals().size();
-            for (S succ : this.getGame().getControllableSuccessors(state))
-                if (worstRank.containsKey(succ) && worstRank.get(succ) < fromSuccessors)
-                    fromSuccessors = worstRank.get(succ);
-        }
-        return fromSuccessors;
-
+        updateWorstRank(state ,worstFromSuccessors.getGoal(), worstFromSuccessors.getPath() + 1 );
     }
     //endregion
 
