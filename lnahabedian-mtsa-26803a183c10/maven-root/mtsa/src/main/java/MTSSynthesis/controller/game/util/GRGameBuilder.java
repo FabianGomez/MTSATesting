@@ -261,18 +261,22 @@ public class GRGameBuilder<State, Action> {
 						actualFluent = fluent;
 				}
 
-				//Remove the fluents of the others guarantees
-				Set<Fluent> removeFluents = new HashSet<Fluent>();
-				for(Fluent fluent : fluents) {
-					for (Formula formula2 : formulas)
-						if (formula2.toString().equals(fluent.getName()) && !fluent.getName().equals(actualFluent.getName())){
-							removeFluents.add(fluent);
-						}
-				}
+				if(actualFluent != null) {
+					//Remove the fluents of the others guarantees
+					Set<Fluent> removeFluents = new HashSet<Fluent>();
+					for (Fluent fluent : fluents) {
+						for (Formula formula2 : formulas)
+							if (formula2.toString().equals(fluent.getName()) && !fluent.getName().equals(actualFluent.getName())) {
+								removeFluents.add(fluent);
+							}
+					}
 
-				for(Fluent fluent : fluents) {
-					if(!removeFluents.contains(fluent))
-						newGoal.getFluents().add(fluent);
+					for (Fluent fluent : fluents) {
+						if (!removeFluents.contains(fluent))
+							newGoal.getFluents().add(fluent);
+					}
+				}else{
+					newGoal.getFluents().addAll(fluents);
 				}
 
 

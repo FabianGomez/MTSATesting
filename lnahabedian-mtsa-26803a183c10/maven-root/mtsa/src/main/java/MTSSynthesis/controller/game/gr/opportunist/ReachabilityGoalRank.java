@@ -2,21 +2,20 @@ package MTSSynthesis.controller.game.gr.opportunist;
 
 import MTSSynthesis.controller.game.gr.StrategyState;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ReachabilityGoalRank<S> {
 
     private Map<S,ReachabilityGoal> ranking;
     private Integer infinityGoal;
     private Integer infinityPath;
-
+    private List<S> infiniteStates;
 
     public ReachabilityGoalRank(Integer infinityGoal, Integer infinityPath){
         ranking = new HashMap<>();
         this.infinityGoal = infinityGoal;
         this.infinityPath = infinityPath;
+        this.infiniteStates = new ArrayList<S>();
     }
 
     public boolean isDefined(S state){
@@ -32,9 +31,18 @@ public class ReachabilityGoalRank<S> {
         return ranking.get(state).getPath();
     }
     public void setState(S state, Integer goal, Integer path){
+        if(isInfinite(state))
+            return;
+
         ranking.put(state, new ReachabilityGoal(goal, path));
     }
-
+    public boolean isInfinite(S state){
+        return infiniteStates.contains(state);
+    }
+    public void setStateInfinite(S state){
+        ranking.put(state, new ReachabilityGoal(infinityGoal, infinityPath));
+        infiniteStates.add(state);
+    }
     public ReachabilityGoal getMinimum(Set<S> states){
         ReachabilityGoal fromSuccessors = new ReachabilityGoal(infinityGoal, infinityPath);
         for( S succ : states){
@@ -48,7 +56,7 @@ public class ReachabilityGoalRank<S> {
     public ReachabilityGoal getMaximum(Set<S> states) {
         ReachabilityGoal fromSuccessors = new ReachabilityGoal(-1, infinityPath);
         for (S succ : states) {
-            if (isDefined(succ) && getGoal(succ) > fromSuccessors.getGoal())
+            if (isDefined(succ) && getGoal(succ) > fromSuccessors.getGoal() && !isInfinite(succ))
                 fromSuccessors = getValue(succ);
             else if (isDefined(succ) && getGoal(succ).equals(fromSuccessors.getGoal()) && getPath(succ) < fromSuccessors.getPath())
                 fromSuccessors = getValue(succ);

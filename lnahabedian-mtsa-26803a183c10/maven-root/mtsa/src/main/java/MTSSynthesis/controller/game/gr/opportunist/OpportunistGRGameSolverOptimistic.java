@@ -20,6 +20,9 @@ public class OpportunistGRGameSolverOptimistic<S> extends OpportunistGRGameSolve
 
         S minState = bestGoal.getMinimumState(this.getGame().getControllableSuccessors(state), rankMayIncrease, nextMemoryToConsider, this);
 
+        if(bestGoal.isInfinite(minState))
+            return;
+
         StrategyState<S, Integer> target = new StrategyState<>(minState, nextMemoryToConsider);
         successors.add(target);
 
