@@ -85,9 +85,12 @@ public class LTSControllerSynthesiserImpl<S,A> implements LTSControllerSynthesis
 			Set<Pair<StrategyState<S, Integer>, StrategyState<S, Integer>>> worseRank = grSolver.getWorseRank();
 			MTS<StrategyState<S, Integer>, A> result = GameStrategyToMTSBuilder.getInstance().buildMTSFrom(plant, strategy, worseRank, maxLazyness);
 
-			if(opportunistic || pessimist || optimist)
-				result.log.addAll(((OpportunistGRGameSolver<S>) gSolver).getOutputSolve());
+			if (result.log != null)
+				result.log.clear();
 
+			if(opportunistic || pessimist || optimist) {
+				result.log.addAll(((OpportunistGRGameSolver<S>) gSolver).getOutputSolve());
+			}
 			result.removeUnreachableStates();
 			return result;
 		} else {

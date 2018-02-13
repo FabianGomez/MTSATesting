@@ -37,7 +37,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
     public List<String> getOutputSolve(){
         if (!isGameSolved())
             this.solveGame();
-
+        outputSolve.clear();
         addOutputLine("Reachable Goals from the initial state: " + this.convertListGoalsToString(this.getReachableGoalsFromTheInitialState()));
         addOutputLine("Reachable Goals: " + this.convertListGoalsToString(this.getReachableGoals()));
         return outputSolve;
@@ -111,6 +111,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         if (this.isGameSolved()) {
             return;
         }
+
 
         for (S state : this.getGame().getStates()) {
             bestGoal.setState(state,bestGoal.getInfinityValue().getGoal(),bestGoal.getInfinityValue().getPath());
@@ -247,6 +248,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
                     setInfinity(strategyState);
                 }
                 bestGoal.setStateInfinite(state);
+                worstGoal.setStateInfinite(state);
                 StrategyState<S, Integer> firstGuaranteeRank = new StrategyState<>(state, 1);
                 Rank infinity = this.getRankSystem().getRank(firstGuaranteeRank);
                 this.addPredecessorsTo(pending, firstGuaranteeRank, infinity);
@@ -451,36 +453,23 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
         if (getGame().isUncontrollable(state)) {
             bestFromSuccessors = bestGoal.getMinimum(this.getGame().getUncontrollableSuccessors(state));
             worstFromSuccessors = worstGoal.getMaximum(this.getGame().getUncontrollableSuccessors(state));
-            boolean infinite = false;
-            for(S succ : this.getGame().getUncontrollableSuccessors(state))
-                infinite = infinite || bestGoal.isInfinite(succ);
 
-            if(infinite)
+            if(bestGoal.isInfiniteByUncontrollableSuccessors(this.getGame().getUncontrollableSuccessors(state)))
                 bestGoal.setStateInfinite(state);
 
-            infinite = false;
-            for(S succ : this.getGame().getUncontrollableSuccessors(state))
-                infinite = infinite || worstGoal.isInfinite(succ);
 
-            if(infinite)
+            if(worstGoal.isInfiniteByUncontrollableSuccessors(this.getGame().getUncontrollableSuccessors(state)))
                 worstGoal.setStateInfinite(state);
 
         } else {
             bestFromSuccessors = bestGoal.getMinimum(this.getGame().getControllableSuccessors(state));
             worstFromSuccessors = worstGoal.getMinimum(this.getGame().getControllableSuccessors(state));
 
-            boolean infinite = true;
-            for(S succ : this.getGame().getControllableSuccessors(state))
-                infinite = infinite && bestGoal.isInfinite(succ);
-
-            if(infinite)
+            if(bestGoal.isInfiniteByControllableSuccessors(this.getGame().getUncontrollableSuccessors(state)))
                 bestGoal.setStateInfinite(state);
 
-            infinite = true;
-            for(S succ : this.getGame().getControllableSuccessors(state))
-                infinite = infinite && worstGoal.isInfinite(succ);
 
-            if(infinite)
+            if(worstGoal.isInfiniteByControllableSuccessors(this.getGame().getUncontrollableSuccessors(state)))
                 worstGoal.setStateInfinite(state);
 
         }

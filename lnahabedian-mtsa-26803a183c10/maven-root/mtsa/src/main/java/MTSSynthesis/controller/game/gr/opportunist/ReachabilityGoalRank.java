@@ -89,4 +89,18 @@ public class ReachabilityGoalRank<S> {
             }
         return minState;
     }
+    public boolean isInfiniteByUncontrollableSuccessors(Set<S> states) {
+        boolean infinite = false;
+        for(S succ : states)
+            infinite = infinite || isInfinite(succ);
+
+        return infinite;
+    }
+    public boolean isInfiniteByControllableSuccessors(Set<S> states) {
+        boolean infinite = true;
+        for(S succ : states)
+            infinite = infinite && isInfinite(succ);
+
+        return infinite;
+    }
 }
