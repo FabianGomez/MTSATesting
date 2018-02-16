@@ -28,4 +28,18 @@ public class OpportunistGRGameSolverOptimistic<S> extends OpportunistGRGameSolve
 
     }
 
+    @Override
+    public List<String> getOutputSolve(){
+        if (!isGameSolved())
+            this.solveGame();
+
+        List<String> outputSolve = super.getOutputSolve();
+        if(bestGoal.getGoal(this.game.getInitialState()).equals(bestGoal.getInfinityValue().getGoal() -1))
+            outputSolve.add("BestGoal from initial state: Safety");
+        else
+            outputSolve.add("BestGoal from initial state: " + bestGoal.getGoal(this.game.getInitialState()));
+
+        return outputSolve;
+    }
+
 }

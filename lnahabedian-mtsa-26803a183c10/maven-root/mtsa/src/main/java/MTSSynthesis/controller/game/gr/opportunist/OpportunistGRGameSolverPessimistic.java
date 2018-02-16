@@ -26,5 +26,18 @@ public class OpportunistGRGameSolverPessimistic<S> extends OpportunistGRGameSolv
         successors.add(target);
     }
 
+    @Override
+    public List<String> getOutputSolve(){
+        if (!isGameSolved())
+            this.solveGame();
+
+        List<String> outputSolve = super.getOutputSolve();
+        if(worstGoal.getGoal(this.game.getInitialState()).equals(worstGoal.getInfinityValue().getGoal() -1))
+            outputSolve.add("WorstGoal from initial state: Safety");
+        else
+            outputSolve.add("WorstGoal from initial state: " + worstGoal.getGoal(this.game.getInitialState()));
+
+        return outputSolve;
+    }
 
 }

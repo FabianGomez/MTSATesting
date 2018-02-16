@@ -24,4 +24,8 @@ public class ReachabilityGoal {
     public void setPath(Integer path) {
         this.path = path;
     }
+    @Override
+    public String toString(){
+        return "<" + goal + "," + path + ">";
+    }
 }
