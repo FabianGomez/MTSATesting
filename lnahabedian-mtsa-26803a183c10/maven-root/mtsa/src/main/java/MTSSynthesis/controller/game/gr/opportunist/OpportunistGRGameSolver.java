@@ -112,12 +112,6 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
             return;
         }
 
-
-        for (S state : this.getGame().getStates()) {
-            bestGoal.setState(state,bestGoal.getInfinityValue().getGoal(),bestGoal.getInfinityValue().getPath());
-            worstGoal.setState(state,worstGoal.getInfinityValue().getGoal(),worstGoal.getInfinityValue().getPath());
-        }
-
         //Solve the game for each goal
         for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++) {
             Queue<StrategyState<S,Integer>> pending = new LinkedList<>();
@@ -129,7 +123,6 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
                 StrategyState<S, Integer> state = pending.poll();
 
-                checkGoals(state.getState(), pending);
                 // The current rank of the state s
                 Rank rank = this.getRank(state);
 
@@ -157,8 +150,10 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
             }
             System.out.println("One goal solved." );
         }
+        System.out.println("Solved MTSA." );
+        solveOpportunistRanks();
         gameSolved();
-        System.out.println("Solved." );
+        System.out.println("Solved Opportunist Ranks." );
     }
     @Override
     public boolean isWinning(S state) {
@@ -247,8 +242,6 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
                     StrategyState<S, Integer> strategyState = new StrategyState<>(state, guaranteeId);
                     setInfinity(strategyState);
                 }
-                bestGoal.setStateInfinite(state);
-                worstGoal.setStateInfinite(state);
                 StrategyState<S, Integer> firstGuaranteeRank = new StrategyState<>(state, 1);
                 Rank infinity = this.getRankSystem().getRank(firstGuaranteeRank);
                 this.addPredecessorsTo(pending, firstGuaranteeRank, infinity);
@@ -263,11 +256,6 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
                 if (!this.getGRGoal().getGuarantee(i).contains(state) && !this.getGRGoal().getFailures().contains(state)
                         && firstAssumption.contains(state)) {
                     pending.add(new StrategyState<>(state, i));
-                }
-                if(this.getGRGoal().getGuarantee(i).contains(state)){
-                    initializeWorstRank(state,actualGoal);
-                    initializeBestRank(state,actualGoal);
-                    addIfNotIn(pending,new StrategyState<>(state, i));
                 }
             }
         }
@@ -429,7 +417,10 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
             return false;
 
         if(worstGoal.isDefined(state) && worstGoal.getGoal(state).equals(newValue) && worstGoal.getPath(state) <= path)
-            return false ;
+            return false;
+
+        if(worstGoal.isDefined(state) && worstGoal.isInfinite(state))
+            return false;
 
         worstGoal.setState(state, newValue, path);
         return true;
@@ -446,51 +437,105 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
             return false;
 
         if(bestGoal.isDefined(state) && bestGoal.getGoal(state)  <= newValue)
-            return false ;
+            return false;
+
+        if(bestGoal.isDefined(state) && bestGoal.isInfinite(state))
+            return false;
 
         bestGoal.setState(state, newValue, path);
         return true;
     }
-    private void checkGoals(S state, Queue<StrategyState<S,Integer>> pending){
+
+    private void solveOpportunistRanks(){
+        for (S state : this.getGame().getStates()) {
+            bestGoal.setState(state,bestGoal.getInfinityValue().getGoal(),bestGoal.getInfinityValue().getPath());
+            worstGoal.setState(state,worstGoal.getInfinityValue().getGoal(),worstGoal.getInfinityValue().getPath());
+        }
+
+        for(actualGoal = 0; actualGoal < getGame().getGoals().size(); actualGoal++){
+            Queue<StrategyState<S,Integer>> pending = new LinkedList<>();
+            this.initialiseGoalsPending(pending);
+            while (!pending.isEmpty()) {
+                StrategyState<S, Integer> state = pending.poll();
+                boolean updated = updateGoals(state.getState(), pending);
+
+                if(updated){
+                    Set<S> predecessors = this.getGame().getPredecessors(state.getState());
+                    for (S pred : predecessors) {
+                        StrategyState<S, Integer> predecessor = new StrategyState<>(pred, 1);
+                        if(!pending.contains(predecessor))
+                            pending.add(predecessor);
+                    }
+                }
+
+            }
+        }
+
+    }
+    private boolean updateGoals(S state, Queue<StrategyState<S,Integer>> pending){
         ReachabilityGoal bestFromSuccessors;
         ReachabilityGoal worstFromSuccessors;
-        
 
+        boolean updated = false;
         if (getGame().isUncontrollable(state)) {
             bestFromSuccessors = bestGoal.getMinimum(this.getGame().getUncontrollableSuccessors(state));
             worstFromSuccessors = worstGoal.getMaximum(this.getGame().getUncontrollableSuccessors(state));
 
             if(bestGoal.isInfiniteByUncontrollableSuccessors(this.getGame().getUncontrollableSuccessors(state)))
-                bestGoal.setStateInfinite(state);
-
+                updated = bestGoal.setStateInfinite(state);
 
             if(worstGoal.isInfiniteByUncontrollableSuccessors(this.getGame().getUncontrollableSuccessors(state)))
-                worstGoal.setStateInfinite(state);
+                updated = updated | worstGoal.setStateInfinite(state);
 
         } else {
             bestFromSuccessors = bestGoal.getMinimum(this.getGame().getControllableSuccessors(state));
             worstFromSuccessors = worstGoal.getMinimum(this.getGame().getControllableSuccessors(state));
 
             if(bestGoal.isInfiniteByControllableSuccessors(this.getGame().getControllableSuccessors(state)))
-                bestGoal.setStateInfinite(state);
-
+                updated = bestGoal.setStateInfinite(state);
 
             if(worstGoal.isInfiniteByControllableSuccessors(this.getGame().getControllableSuccessors(state)))
-                worstGoal.setStateInfinite(state);
+                updated = updated | worstGoal.setStateInfinite(state);
+
 
         }
 
-        boolean updated = updateBestRank(state ,bestFromSuccessors.getGoal(), bestFromSuccessors.getPath() + 1 );
-        updated = updated || updateWorstRank(state ,worstFromSuccessors.getGoal(), worstFromSuccessors.getPath() + 1 );
+        updated = updated | updateBestRank(state ,bestFromSuccessors.getGoal(), bestFromSuccessors.getPath() + 1 );
+        updated = updated | updateWorstRank(state ,worstFromSuccessors.getGoal(), worstFromSuccessors.getPath() + 1 );
 
-        if(updated){
-            Set<S> predecessors = this.getGame().getPredecessors(state);
-            for (S pred : predecessors) {
-                StrategyState<S, Integer> predecessor = new StrategyState<>(pred, 1);
-                if(!pending.contains(predecessor))
-                    pending.add(predecessor);
+        return updated;
+
+
+    }
+
+    protected void initialiseGoalsPending(Queue<StrategyState<S, Integer>> pending) {
+        for (S state : this.getGame().getStates()) {
+            //Endings
+            if (this.getGame().getControllableSuccessors(state).isEmpty() && this.getGame().getUncontrollableSuccessors(state).isEmpty()) {
+                bestGoal.setStateInfinite(state);
+                worstGoal.setStateInfinite(state);
+                Set<S> predecessors = this.getGame().getPredecessors(state);
+                for (S pred : predecessors) {
+                    StrategyState<S, Integer> predecessor = new StrategyState<>(pred, 1);
+                    if(!pending.contains(predecessor))
+                        pending.add(predecessor);
+                }
+            }
+            //Initials
+            for (int i = 1; i <= this.getGRGoal().getGuaranteesQuantity(); i++) {
+                if(this.getGRGoal().getGuarantee(i).contains(state)){
+                    initializeWorstRank(state,actualGoal);
+                    initializeBestRank(state,actualGoal);
+                    Set<S> predecessors = this.getGame().getPredecessors(state);
+                    for (S pred : predecessors) {
+                        StrategyState<S, Integer> predecessor = new StrategyState<>(pred, 1);
+                        if(!pending.contains(predecessor))
+                            pending.add(predecessor);
+                    }
+                }
             }
         }
+
     }
     //endregion
 

@@ -39,9 +39,12 @@ public class ReachabilityGoalRank<S> {
     public boolean isInfinite(S state){
         return infiniteStates.contains(state);
     }
-    public void setStateInfinite(S state){
+    public boolean setStateInfinite(S state){
+        if(isInfinite(state))
+            return false;
         ranking.put(state, new ReachabilityGoal(infinityGoal, infinityPath));
         infiniteStates.add(state);
+        return true;
     }
     public ReachabilityGoal getMinimum(Set<S> states){
         ReachabilityGoal fromSuccessors = new ReachabilityGoal(infinityGoal, infinityPath);
