@@ -198,7 +198,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
 
         GRRank bestRank = this.getBestFromSuccessors(state, guarantee);
 
-        if (getGRGoal().getGuarantee(guarantee).contains(state) || getGRGoal().getFailures().contains(state)) {
+        if (this.getGRGoal().getGuarantee(guarantee).contains(state) || this.getGRGoal().getFailures().contains(state)) {
             GRRankContext initialGuaranteeContext = this.getRankSystem().getContext(strategyState);
 
             // In this case, the infinity value of bestRank and returnRank may
@@ -212,7 +212,7 @@ public class OpportunistGRGameSolver<S> extends PerfectInfoGRGameSolver<S> {
                 // for this guaranteeId the rank is "zero"
                 return new GRRank(initialGuaranteeContext);
             }
-        } else if (getGRGoal().getAssumption(bestRank.getAssume()).contains(state)) {
+        } else if (this.getGRGoal().getAssumption(bestRank.getAssume()).contains(state)) {
             bestRank.increase();
         }
 

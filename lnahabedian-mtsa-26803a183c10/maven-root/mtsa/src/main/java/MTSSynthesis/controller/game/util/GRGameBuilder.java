@@ -287,6 +287,8 @@ public class GRGameBuilder<State, Action> {
 				GRGoal<State> grGoal = new GRGoal<State>(guarantees, assumptions, failures,  newGoal.isPermissive());
 				grGoals.add(grGoal);
 
+				assumptions = new Assumptions<State>();
+				failures = new HashSet<State>();
 			}
 
 			//Creating the safety goal, a goal without any guarantee
